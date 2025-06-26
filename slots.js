@@ -1,21 +1,127 @@
-// Enhanced Slots game functionality
+// Enhanced Slots game functionality - FIXED VERSION
 class SlotsGame {
   constructor(gameInstance) {
     this.game = gameInstance;
-    this.config = window.GameConfig.SLOTS;
+    this.config = GameConfig.SLOTS;
     this.spinning = false;
     this.reels = ["?", "?", "?"];
     this.reelElements = [];
     this.spinHistory = [];
     this.autoSpinActive = false;
     this.autoSpinCount = 0;
+    this.screenElement = null;
     this.init();
   }
 
   init() {
-    this.bindEvents();
-    this.updateDisplay();
     this.initializeAnimations();
+  }
+
+  // HTML template for the slots screen
+  getHTMLTemplate() {
+    return `
+      <div id="slots-screen" class="screen">
+        <div class="container">
+          <button id="slots-back" class="back-button">← Back to Hub</button>
+          <div class="game-header">
+            <h1>🎰 Slots</h1>
+            <p>Money: <span id="slots-money">${this.game.formatMoney(
+              this.game.playerMoney
+            )}</span> | Bet: $<span id="slots-current-bet">${
+      this.game.gameSettings.slotsBet
+    }</span></p>
+          </div>
+          
+          <div class="slots-machine">
+            <div class="slots-reels">
+              <div class="reel">?</div>
+              <div class="reel">?</div>
+              <div class="reel">?</div>
+            </div>
+            <button id="spin-button" class="spin-button">SPIN ($<span id="spin-cost">${
+              this.game.gameSettings.slotsBet
+            }</span>)</button>
+            
+            <div class="auto-spin-controls">
+              <h4>Auto Spin</h4>
+              <button class="auto-spin-button" data-spins="5">5x</button>
+              <button class="auto-spin-button" data-spins="10">10x</button>
+              <button class="auto-spin-button" data-spins="25">25x</button>
+              <button class="auto-spin-button" data-spins="50">50x</button>
+            </div>
+          </div>
+          
+          <div class="spin-history" id="spin-history-container">
+            <h4>📊 Recent Spins</h4>
+            <div id="spin-history"></div>
+          </div>
+          
+          <div class="payouts-info">
+            <h3>💰 Payouts 💰</h3>
+            <div class="payout-tier mega">
+              <p>7️⃣ 7️⃣ 7️⃣ Lucky Sevens: <span class="multiplier">100x</span></p>
+              <p>💎 💎 💎 Diamond Jackpot: <span class="multiplier">50x</span></p>
+              <p>💰 💰 💰 Money Bags: <span class="multiplier">25x</span></p>
+            </div>
+            <div class="payout-tier high">
+              <p>⭐ ⭐ ⭐ Triple Stars: <span class="multiplier">15x</span></p>
+              <p>🍊 🍊 🍊 Orange Burst: <span class="multiplier">8x</span></p>
+              <p>Mixed Jackpot Symbols: <span class="multiplier">12x</span></p>
+            </div>
+            <div class="payout-tier pairs">
+              <p>💎 💎 Diamond Pair: <span class="multiplier">5x</span></p>
+              <p>7️⃣7️⃣ Lucky Pair: <span class="multiplier">4x</span></p>
+              <p>Any Pair: <span class="multiplier">1.5x</span></p>
+            </div>
+            <div class="payout-tier bonus">
+              <p>💎 Diamond Bonus: <span class="multiplier">0.5x</span></p>
+              <p>7️⃣ Lucky Seven: <span class="multiplier">0.25x</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Create and inject the HTML
+  createScreen() {
+    const gameContainer = document.getElementById("game-container");
+    if (gameContainer) {
+      gameContainer.innerHTML = this.getHTMLTemplate();
+      this.screenElement = document.getElementById("slots-screen");
+      this.bindEvents();
+      this.updateDisplay();
+    }
+  }
+
+  // Remove the screen
+  destroyScreen() {
+    this.clearPreviousAnimations();
+    this.stopAutoSpin();
+    if (this.screenElement) {
+      this.screenElement.remove();
+      this.screenElement = null;
+    }
+  }
+
+  // Show the screen
+  show() {
+    this.createScreen();
+    if (this.screenElement) {
+      this.screenElement.classList.add("active");
+      this.onShow();
+    }
+  }
+
+  // Hide the screen
+  hide() {
+    if (this.screenElement) {
+      this.screenElement.classList.remove("active");
+      // Small delay before destroying to allow transition
+      setTimeout(() => {
+        this.destroyScreen();
+      }, 100);
+    }
   }
 
   initializeAnimations() {
@@ -26,9 +132,10 @@ class SlotsGame {
   }
 
   bindEvents() {
-    document
-      .getElementById("spin-button")
-      .addEventListener("click", () => this.spin());
+    const spinButton = document.getElementById("spin-button");
+    if (spinButton) {
+      spinButton.addEventListener("click", () => this.spin());
+    }
 
     // Add auto-spin controls
     const autoSpinContainer = document.querySelector(".auto-spin-controls");
@@ -108,15 +215,19 @@ class SlotsGame {
       // Stop each reel at different times for realistic cascade effect
       const stopDelay = 1800 + index * 300;
       setTimeout(() => {
-        reel.classList.remove("spinning");
-        reel.style.filter = "";
-        reel.style.transform = "";
+        if (reel) {
+          reel.classList.remove("spinning");
+          reel.style.filter = "";
+          reel.style.transform = "";
 
-        // Add landing animation
-        reel.style.animation = "reelLand 0.3s ease-out";
-        setTimeout(() => {
-          reel.style.animation = "";
-        }, 300);
+          // Add landing animation
+          reel.style.animation = "reelLand 0.3s ease-out";
+          setTimeout(() => {
+            if (reel) {
+              reel.style.animation = "";
+            }
+          }, 300);
+        }
       }, stopDelay);
     });
   }
@@ -189,16 +300,20 @@ class SlotsGame {
   revealResults() {
     this.reelElements.forEach((reel, index) => {
       setTimeout(() => {
-        reel.textContent = this.reels[index];
+        if (reel) {
+          reel.textContent = this.reels[index];
 
-        // Add symbol-specific effects
-        this.addSymbolEffects(reel, this.reels[index]);
+          // Add symbol-specific effects
+          this.addSymbolEffects(reel, this.reels[index]);
 
-        // Animate the reveal
-        reel.style.animation = "symbolReveal 0.5s ease-out";
-        setTimeout(() => {
-          reel.style.animation = "";
-        }, 500);
+          // Animate the reveal
+          reel.style.animation = "symbolReveal 0.5s ease-out";
+          setTimeout(() => {
+            if (reel) {
+              reel.style.animation = "";
+            }
+          }, 500);
+        }
       }, index * 200);
     });
   }
@@ -382,6 +497,7 @@ class SlotsGame {
 
   showEnhancedWinAnimation(result) {
     const slotsContainer = document.querySelector(".slots-machine");
+    if (!slotsContainer) return;
 
     // Remove any existing animation classes
     slotsContainer.classList.remove(
@@ -395,27 +511,22 @@ class SlotsGame {
       case "mega":
         slotsContainer.classList.add("mega-win");
         this.showMegaJackpotEffects(result);
-        this.playWinSound("mega");
         break;
       case "high":
         slotsContainer.classList.add("big-win");
         this.showBigWinEffects(result);
-        this.playWinSound("big");
         break;
       case "medium":
         slotsContainer.classList.add("small-win");
         this.showMediumWinEffects(result);
-        this.playWinSound("medium");
         break;
       case "low":
         slotsContainer.classList.add("small-win");
         this.showSmallWinEffects(result);
-        this.playWinSound("small");
         break;
       case "bonus":
         slotsContainer.classList.add("bonus-win");
         this.showBonusEffects(result);
-        this.playWinSound("bonus");
         break;
     }
 
@@ -425,12 +536,14 @@ class SlotsGame {
     // Remove animation classes after animation
     setTimeout(
       () => {
-        slotsContainer.classList.remove(
-          "mega-win",
-          "big-win",
-          "small-win",
-          "bonus-win"
-        );
+        if (slotsContainer) {
+          slotsContainer.classList.remove(
+            "mega-win",
+            "big-win",
+            "small-win",
+            "bonus-win"
+          );
+        }
       },
       result.tier === "mega" ? 4000 : 3000
     );
@@ -454,10 +567,10 @@ class SlotsGame {
 
   showBigWinEffects(result) {
     if (window.AnimationUtils) {
-      window.AnimationUtils.createConfetti(
-        document.querySelector(".slots-machine"),
-        50
-      );
+      const slotsContainer = document.querySelector(".slots-machine");
+      if (slotsContainer) {
+        window.AnimationUtils.createConfetti(slotsContainer, 50);
+      }
     }
     this.showFireworks(4);
     this.createFloatingText("BIG WIN!", "#28a745");
@@ -465,47 +578,60 @@ class SlotsGame {
 
   showMediumWinEffects(result) {
     if (window.AnimationUtils) {
-      window.AnimationUtils.createConfetti(
-        document.querySelector(".slots-machine"),
-        25
-      );
+      const slotsContainer = document.querySelector(".slots-machine");
+      if (slotsContainer) {
+        window.AnimationUtils.createConfetti(slotsContainer, 25);
+      }
     }
     this.createFloatingText("NICE WIN!", "#ffc107");
   }
 
   showSmallWinEffects(result) {
     // Subtle sparkle effect
-    this.createSparkles(document.querySelector(".slots-reels"), 10);
+    const reelsContainer = document.querySelector(".slots-reels");
+    if (reelsContainer) {
+      this.createSparkles(reelsContainer, 10);
+    }
     this.createFloatingText("WIN!", "#17a2b8");
   }
 
   showBonusEffects(result) {
     // Gentle pulse effect
     const reels = document.querySelector(".slots-reels");
-    reels.style.animation = "bonusPulse 1s ease-in-out";
-    setTimeout(() => {
-      reels.style.animation = "";
-    }, 1000);
+    if (reels) {
+      reels.style.animation = "bonusPulse 1s ease-in-out";
+      setTimeout(() => {
+        if (reels) {
+          reels.style.animation = "";
+        }
+      }, 1000);
+    }
   }
 
   showEnhancedLoseAnimation() {
     const slotsContainer = document.querySelector(".slots-machine");
-    slotsContainer.classList.add("lose-spin");
+    if (slotsContainer) {
+      slotsContainer.classList.add("lose-spin");
 
-    // Subtle shake effect
-    if (window.AnimationUtils) {
-      window.AnimationUtils.shakeElement(slotsContainer, 300);
+      // Subtle shake effect
+      if (window.AnimationUtils) {
+        window.AnimationUtils.shakeElement(slotsContainer, 300);
+      }
+
+      setTimeout(() => {
+        if (slotsContainer) {
+          slotsContainer.classList.remove("lose-spin");
+        }
+      }, 1000);
     }
-
-    setTimeout(() => {
-      slotsContainer.classList.remove("lose-spin");
-    }, 1000);
   }
 
   highlightWinningSymbols(result) {
     if (result.winAmount <= 0) return;
 
     this.reelElements.forEach((reel, index) => {
+      if (!reel) return;
+
       const symbol = this.reels[index];
 
       // Determine if this symbol contributed to the win
@@ -538,7 +664,9 @@ class SlotsGame {
         reel.classList.add(glowClass);
 
         setTimeout(() => {
-          reel.classList.remove("winning-symbol", glowClass);
+          if (reel) {
+            reel.classList.remove("winning-symbol", glowClass);
+          }
         }, 3000);
       }
     });
@@ -547,17 +675,17 @@ class SlotsGame {
   createScreenFlash(color) {
     const flash = document.createElement("div");
     flash.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: ${color};
-            opacity: 0.7;
-            z-index: 9999;
-            pointer-events: none;
-            animation: screenFlash 0.5s ease-out;
-        `;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: ${color};
+      opacity: 0.7;
+      z-index: 9999;
+      pointer-events: none;
+      animation: screenFlash 0.5s ease-out;
+    `;
 
     document.body.appendChild(flash);
 
@@ -572,18 +700,18 @@ class SlotsGame {
     const jackpotText = document.createElement("div");
     jackpotText.textContent = text;
     jackpotText.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 3rem;
-            font-weight: bold;
-            color: #ffd700;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-            z-index: 9998;
-            pointer-events: none;
-            animation: jackpotText 3s ease-out forwards;
-        `;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3rem;
+      font-weight: bold;
+      color: #ffd700;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+      z-index: 9998;
+      pointer-events: none;
+      animation: jackpotText 3s ease-out forwards;
+    `;
 
     document.body.appendChild(jackpotText);
 
@@ -596,31 +724,34 @@ class SlotsGame {
 
   createFloatingText(text, color) {
     if (window.AnimationUtils) {
-      const rect = document
-        .querySelector(".slots-reels")
-        .getBoundingClientRect();
-      window.AnimationUtils.floatingText(
-        text,
-        rect.left + rect.width / 2,
-        rect.top + rect.height / 2,
-        color,
-        2000
-      );
+      const reelsContainer = document.querySelector(".slots-reels");
+      if (reelsContainer) {
+        const rect = reelsContainer.getBoundingClientRect();
+        window.AnimationUtils.floatingText(
+          text,
+          rect.left + rect.width / 2,
+          rect.top + rect.height / 2,
+          color,
+          2000
+        );
+      }
     }
   }
 
   createSparkles(container, count) {
+    if (!container) return;
+
     for (let i = 0; i < count; i++) {
       const sparkle = document.createElement("div");
       sparkle.innerHTML = "✨";
       sparkle.style.cssText = `
-                position: absolute;
-                left: ${Math.random() * 100}%;
-                top: ${Math.random() * 100}%;
-                font-size: 1rem;
-                pointer-events: none;
-                animation: sparkle 1s ease-out forwards;
-            `;
+        position: absolute;
+        left: ${Math.random() * 100}%;
+        top: ${Math.random() * 100}%;
+        font-size: 1rem;
+        pointer-events: none;
+        animation: sparkle 1s ease-out forwards;
+      `;
 
       container.style.position = "relative";
       container.appendChild(sparkle);
@@ -635,6 +766,7 @@ class SlotsGame {
 
   showFireworks(count = 4) {
     const container = document.querySelector(".slots-machine");
+    if (!container) return;
 
     for (let i = 0; i < count; i++) {
       setTimeout(() => {
@@ -644,15 +776,17 @@ class SlotsGame {
   }
 
   createSingleFirework(container) {
+    if (!container) return;
+
     const firework = document.createElement("div");
     firework.className = "firework-burst";
     firework.style.cssText = `
-            position: absolute;
-            left: ${20 + Math.random() * 60}%;
-            top: ${20 + Math.random() * 60}%;
-            width: 4px;
-            height: 4px;
-        `;
+      position: absolute;
+      left: ${20 + Math.random() * 60}%;
+      top: ${20 + Math.random() * 60}%;
+      width: 4px;
+      height: 4px;
+    `;
 
     // Create particles
     const colors = [
@@ -668,16 +802,14 @@ class SlotsGame {
     for (let i = 0; i < 12; i++) {
       const particle = document.createElement("div");
       particle.style.cssText = `
-                position: absolute;
-                width: 6px;
-                height: 6px;
-                background: ${
-                  colors[Math.floor(Math.random() * colors.length)]
-                };
-                border-radius: 50%;
-                animation: fireworkParticle 1.5s ease-out forwards;
-                transform: rotate(${i * 30}deg);
-            `;
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        background: ${colors[Math.floor(Math.random() * colors.length)]};
+        border-radius: 50%;
+        animation: fireworkParticle 1.5s ease-out forwards;
+        transform: rotate(${i * 30}deg);
+      `;
       firework.appendChild(particle);
     }
 
@@ -689,12 +821,6 @@ class SlotsGame {
         firework.parentNode.removeChild(firework);
       }
     }, 1500);
-  }
-
-  playWinSound(type) {
-    // Placeholder for sound effects
-    // Could implement Web Audio API sounds here
-    console.log(`Playing ${type} win sound`);
   }
 
   clearPreviousAnimations() {
@@ -725,12 +851,16 @@ class SlotsGame {
   updateDisplay() {
     const reelElements = document.querySelectorAll(".reel");
     reelElements.forEach((reel, index) => {
-      reel.textContent = this.reels[index];
+      if (reel) {
+        reel.textContent = this.reels[index];
+      }
     });
   }
 
   updateSpinButton() {
     const spinButton = document.getElementById("spin-button");
+    if (!spinButton) return;
+
     const bet = this.game.gameSettings.slotsBet;
 
     if (this.spinning) {
@@ -758,26 +888,29 @@ class SlotsGame {
       payoutInfo = document.createElement("div");
       payoutInfo.id = "last-payout";
       payoutInfo.className = "payout-info";
-      document.querySelector(".slots-machine").appendChild(payoutInfo);
+      const slotsContainer = document.querySelector(".slots-machine");
+      if (slotsContainer) {
+        slotsContainer.appendChild(payoutInfo);
+      }
     }
 
     if (result.winAmount > 0) {
       payoutInfo.innerHTML = `
-                <div class="payout-text win ${result.tier}">
-                    <div class="win-amount">${this.game.formatMoney(
-                      result.winAmount
-                    )}</div>
-                    <div class="win-name">${result.name}</div>
-                    <div class="win-multiplier">${result.multiplier}x</div>
-                </div>
-            `;
+        <div class="payout-text win ${result.tier}">
+          <div class="win-amount">${this.game.formatMoney(
+            result.winAmount
+          )}</div>
+          <div class="win-name">${result.name}</div>
+          <div class="win-multiplier">${result.multiplier}x</div>
+        </div>
+      `;
     } else {
       payoutInfo.innerHTML = `
-                <div class="payout-text lose">
-                    <div class="lose-message">No match this spin</div>
-                    <div class="lose-encouragement">Keep trying!</div>
-                </div>
-            `;
+        <div class="payout-text lose">
+          <div class="lose-message">No match this spin</div>
+          <div class="lose-encouragement">Keep trying!</div>
+        </div>
+      `;
     }
 
     // Show with animation
@@ -786,8 +919,10 @@ class SlotsGame {
 
     // Fade out after delay
     setTimeout(() => {
-      payoutInfo.style.opacity = "0.7";
-      payoutInfo.style.transform = "scale(0.95)";
+      if (payoutInfo) {
+        payoutInfo.style.opacity = "0.7";
+        payoutInfo.style.transform = "scale(0.95)";
+      }
     }, 3000);
   }
 
@@ -805,15 +940,15 @@ class SlotsGame {
         .reverse()
         .map(
           (spin) => `
-                <div class="history-item ${spin.result.tier}">
-                    <div class="history-reels">${spin.reels.join(" ")}</div>
-                    <div class="history-result">${
-                      spin.result.winAmount > 0
-                        ? "+" + this.game.formatMoney(spin.result.winAmount)
-                        : "No win"
-                    }</div>
-                </div>
-            `
+            <div class="history-item ${spin.result.tier}">
+              <div class="history-reels">${spin.reels.join(" ")}</div>
+              <div class="history-result">${
+                spin.result.winAmount > 0
+                  ? "+" + this.game.formatMoney(spin.result.winAmount)
+                  : "No win"
+              }</div>
+            </div>
+          `
         )
         .join("");
     }
@@ -844,8 +979,23 @@ class SlotsGame {
   onShow() {
     // Update bet display
     const bet = this.game.gameSettings.slotsBet;
-    document.getElementById("slots-current-bet").textContent = bet;
-    document.getElementById("spin-cost").textContent = bet;
+    const elements = [
+      { id: "slots-current-bet", value: bet },
+      { id: "spin-cost", value: bet },
+    ];
+
+    elements.forEach(({ id, value }) => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.textContent = value;
+      }
+    });
+
+    // Update money display
+    const moneyElement = document.getElementById("slots-money");
+    if (moneyElement) {
+      moneyElement.textContent = this.game.formatMoney(this.game.playerMoney);
+    }
 
     // Update spin button
     this.updateSpinButton();
@@ -855,83 +1005,10 @@ class SlotsGame {
 
     // Clear any existing animations
     this.clearPreviousAnimations();
-
-    // Update paytable display
-    this.updatePaytableDisplay();
-  }
-
-  updatePaytableDisplay() {
-    const paytableEl = document.querySelector(".payouts-info");
-    if (paytableEl) {
-      // Show top payouts
-      paytableEl.innerHTML = `
-                <h3>💰 Payouts 💰</h3>
-                <div class="payout-tier mega">
-                    <p>7️⃣ 7️⃣ 7️⃣ Lucky Sevens: <span class="multiplier">100x</span></p>
-                    <p>💎 💎 💎 Diamond Jackpot: <span class="multiplier">50x</span></p>
-                    <p>💰 💰 💰 Money Bags: <span class="multiplier">25x</span></p>
-                </div>
-                <div class="payout-tier high">
-                    <p>⭐ ⭐ ⭐ Triple Stars: <span class="multiplier">15x</span></p>
-                    <p>🍊 🍊 🍊 Orange Burst: <span class="multiplier">8x</span></p>
-                    <p>Mixed Jackpot Symbols: <span class="multiplier">12x</span></p>
-                </div>
-                <div class="payout-tier pairs">
-                    <p>💎 💎 Diamond Pair: <span class="multiplier">5x</span></p>
-                    <p>7️⃣7️⃣ Lucky Pair: <span class="multiplier">4x</span></p>
-                    <p>Any Pair: <span class="multiplier">1.5x</span></p>
-                </div>
-                <div class="payout-tier bonus">
-                    <p>💎 Diamond Bonus: <span class="multiplier">0.5x</span></p>
-                    <p>7️⃣ Lucky Seven: <span class="multiplier">0.25x</span></p>
-                </div>
-            `;
-    }
-  }
-
-  // Get game statistics
-  getStats() {
-    const totalSpins = this.spinHistory.length;
-    const totalWagered = this.spinHistory.reduce(
-      (sum, spin) => sum + spin.bet,
-      0
-    );
-    const totalWon = this.spinHistory.reduce(
-      (sum, spin) => sum + spin.result.winAmount,
-      0
-    );
-    const biggestWin = Math.max(
-      ...this.spinHistory.map((spin) => spin.result.winAmount),
-      0
-    );
-    const winRate =
-      totalSpins > 0
-        ? (
-            (this.spinHistory.filter((spin) => spin.result.winAmount > 0)
-              .length /
-              totalSpins) *
-            100
-          ).toFixed(1)
-        : 0;
-
-    return {
-      totalSpins,
-      totalWagered,
-      totalWon,
-      biggestWin,
-      winRate: winRate + "%",
-      netProfit: totalWon - totalWagered,
-    };
   }
 }
 
-// Initialize slots when available
+// Make SlotsGame available globally
 if (typeof window !== "undefined") {
-  document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(() => {
-      if (window.game) {
-        window.slotsGame = new SlotsGame(window.game);
-      }
-    }, 100);
-  });
+  window.SlotsGame = SlotsGame;
 }
