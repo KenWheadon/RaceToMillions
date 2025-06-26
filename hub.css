@@ -1,0 +1,258 @@
+/* Hub screen specific styles */
+
+.game-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+/* Player status styles */
+.player-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.player-row:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(5px);
+}
+
+.player-self {
+    background: rgba(59, 130, 246, 0.3) !important;
+    border: 2px solid #3b82f6;
+    font-weight: bold;
+}
+
+.leading-player {
+    background: rgba(255, 215, 0, 0.3) !important;
+    border: 2px solid #ffd700;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        box-shadow: 0 0 5px #ffd700;
+    }
+    to {
+        box-shadow: 0 0 20px #ffd700, 0 0 30px #ffd700;
+    }
+}
+
+.player-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.player-money {
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.player-location {
+    font-size: 0.9rem;
+    color: #ccc;
+    font-style: italic;
+}
+
+/* Game options styles */
+.game-option {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.game-option:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.game-option h3 {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.game-option p {
+    margin-bottom: 15px;
+    color: #ddd;
+}
+
+/* Specific game option colors */
+.slots-option {
+    border-color: rgba(255, 193, 7, 0.3);
+}
+
+.slots-option:hover {
+    border-color: #ffc107;
+    background: rgba(255, 193, 7, 0.1);
+}
+
+.slots-button {
+    background: #ffc107;
+    color: #000;
+}
+
+.slots-button:hover {
+    background: #ffb300;
+}
+
+.blackjack-option {
+    border-color: rgba(220, 53, 69, 0.3);
+}
+
+.blackjack-option:hover {
+    border-color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.blackjack-button {
+    background: #dc3545;
+    color: white;
+}
+
+.blackjack-button:hover {
+    background: #c82333;
+}
+
+.roulette-option {
+    border-color: rgba(40, 167, 69, 0.3);
+}
+
+.roulette-option:hover {
+    border-color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.roulette-button {
+    background: #28a745;
+    color: white;
+}
+
+.roulette-button:hover {
+    background: #218838;
+}
+
+.trash-option {
+    border-color: rgba(108, 117, 125, 0.3);
+}
+
+.trash-option:hover {
+    border-color: #6c757d;
+    background: rgba(108, 117, 125, 0.1);
+}
+
+.trash-button {
+    background: #6c757d;
+    color: white;
+}
+
+.trash-button:hover {
+    background: #545b62;
+}
+
+/* Progress indicators */
+.progress-container {
+    margin-top: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.progress-bar-container {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    height: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #ffd700, #ffed4e);
+    height: 100%;
+    transition: width 0.5s ease;
+    border-radius: 8px;
+}
+
+.progress-text {
+    text-align: center;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+/* Ranking display */
+.rank-display {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ffd700;
+    margin-top: 10px;
+}
+
+/* Responsive design for hub */
+@media (max-width: 768px) {
+    .game-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .player-row {
+        padding: 12px;
+        flex-direction: column;
+        text-align: center;
+        gap: 5px;
+    }
+    
+    .player-row > span {
+        width: 100%;
+    }
+    
+    .game-option {
+        padding: 15px;
+    }
+    
+    .game-option h3 {
+        font-size: 1.1rem;
+    }
+}
+
+/* Statistics display */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.stat-item {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ffd700;
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #ccc;
+    margin-top: 5px;
+}

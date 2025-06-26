@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race to $1,000,000</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="hub.css">
+    <link rel="stylesheet" href="blackjack.css">
+    <link rel="stylesheet" href="roulette.css">
+    <link rel="stylesheet" href="slots.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Hub Screen -->
+        <div id="hub-screen" class="screen active">
+            <div class="container">
+                <div class="header">
+                    <h1>Race to $1,000,000</h1>
+                    <p class="money-display">Your Money: <span id="player-money">$100.00</span></p>
+                </div>
+                
+                <div class="game-layout">
+                    <!-- Players Status -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Player Status</h2>
+                        </div>
+                        <div class="card-content">
+                            <div id="players-list">
+                                <div class="player-row player-self">
+                                    <span class="player-name">You</span>
+                                    <span class="player-money" id="hub-player-money">$100.00</span>
+                                    <span class="player-location">In Hub</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Game Options -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Games</h2>
+                        </div>
+                        <div class="card-content">
+                            <!-- Slots -->
+                            <div class="game-option slots-option">
+                                <h3>🎰 Slots</h3>
+                                <div class="bet-selector">
+                                    <label>Bet:</label>
+                                    <select id="slots-bet">
+                                        <option value="1">$1</option>
+                                        <option value="100">$100</option>
+                                        <option value="10000">$10,000</option>
+                                    </select>
+                                </div>
+                                <button id="play-slots" class="game-button slots-button">Play Slots</button>
+                            </div>
+                            
+                            <!-- Blackjack -->
+                            <div class="game-option blackjack-option">
+                                <h3>🃏 Blackjack</h3>
+                                <div class="bet-selector">
+                                    <label>Bet:</label>
+                                    <select id="blackjack-bet">
+                                        <option value="5">$5</option>
+                                        <option value="500">$500</option>
+                                        <option value="50000">$50,000</option>
+                                    </select>
+                                </div>
+                                <button id="play-blackjack" class="game-button blackjack-button">Play Blackjack</button>
+                            </div>
+                            
+                            <!-- Roulette -->
+                            <div class="game-option roulette-option">
+                                <h3>🎯 Roulette</h3>
+                                <div class="bet-selector">
+                                    <label>Bet:</label>
+                                    <select id="roulette-bet">
+                                        <option value="1000">$1,000</option>
+                                        <option value="25000">$25,000</option>
+                                        <option value="100000">$100,000</option>
+                                    </select>
+                                </div>
+                                <button id="play-roulette" class="game-button roulette-button">Play Roulette</button>
+                            </div>
+                            
+                            <!-- Trash Search -->
+                            <div class="game-option trash-option">
+                                <h3>🗑️ Search Trash</h3>
+                                <p>Find $0.10 per search</p>
+                                <button id="search-trash" class="game-button trash-button">Search Trash</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slots Screen -->
+        <div id="slots-screen" class="screen">
+            <div class="container">
+                <button id="slots-back" class="back-button">← Back to Hub</button>
+                <div class="game-header">
+                    <h1>🎰 Slots</h1>
+                    <p>Money: <span id="slots-money">$100.00</span> | Bet: $<span id="slots-current-bet">1</span></p>
+                </div>
+                
+                <div class="slots-machine">
+                    <div class="slots-reels">
+                        <div class="reel">?</div>
+                        <div class="reel">?</div>
+                        <div class="reel">?</div>
+                    </div>
+                    <button id="spin-button" class="spin-button">SPIN ($<span id="spin-cost">1</span>)</button>
+                </div>
+                
+                <div class="payouts-info">
+                    <h3>Payouts:</h3>
+                    <p>🍒🍒🍒 Three of a kind: 4x</p>
+                    <p>🍒🍒_ Two of a kind: 1.5x</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Blackjack Screen -->
+        <div id="blackjack-screen" class="screen">
+            <div class="container">
+                <button id="blackjack-back" class="back-button">← Back to Hub</button>
+                <div class="game-header">
+                    <h1>🃏 Blackjack</h1>
+                    <p>Money: <span id="blackjack-money">$100.00</span> | Bet: $<span id="blackjack-current-bet">5</span></p>
+                </div>
+                
+                <div id="blackjack-table" class="blackjack-table">
+                    <div class="dealer-section">
+                        <h3>Dealer (<span id="dealer-total">0</span>)</h3>
+                        <div id="dealer-cards" class="card-area"></div>
+                    </div>
+                    
+                    <div class="player-section">
+                        <h3>You (<span id="player-total">0</span>)</h3>
+                        <div id="player-cards" class="card-area"></div>
+                    </div>
+                    
+                    <div class="game-controls">
+                        <button id="deal-button" class="deal-button">Deal Cards ($<span id="deal-cost">5</span>)</button>
+                        <div id="game-actions" class="game-actions" style="display: none;">
+                            <button id="hit-button" class="action-button">HIT</button>
+                            <button id="stand-button" class="action-button">STAND</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Roulette Screen -->
+        <div id="roulette-screen" class="screen">
+            <div class="container">
+                <button id="roulette-back" class="back-button">← Back to Hub</button>
+                <div class="game-header">
+                    <h1>🎯 Roulette</h1>
+                    <p>Money: <span id="roulette-money">$100.00</span> | Bet: $<span id="roulette-current-bet">1,000</span></p>
+                </div>
+                
+                <div class="roulette-table">
+                    <div class="betting-grid">
+                        <div class="even-money-bets">
+                            <button class="bet-button red-bet" data-bet="red">RED (1:1)</button>
+                            <button class="bet-button black-bet" data-bet="black">BLACK (1:1)</button>
+                            <button class="bet-button odd-bet" data-bet="odd">ODD (1:1)</button>
+                            <button class="bet-button even-bet" data-bet="even">EVEN (1:1)</button>
+                        </div>
+                        
+                        <div class="dozen-bets">
+                            <button class="bet-button dozen-bet" data-bet="1-12">1-12 (2:1)</button>
+                            <button class="bet-button dozen-bet" data-bet="13-24">13-24 (2:1)</button>
+                            <button class="bet-button dozen-bet" data-bet="25-36">25-36 (2:1)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Winner Screen -->
+        <div id="winner-screen" class="screen">
+            <div class="container winner-container">
+                <h1 class="winner-title">🎉 WINNER! 🎉</h1>
+                <h2 id="winner-name">Someone reached $1,000,000!</h2>
+                <p id="winner-amount">Final amount: $1,000,000.00</p>
+                <button id="play-again" class="play-again-button">Play Again</button>
+            </div>
+        </div>
+        
+        <!-- Message Display -->
+        <div id="message-display" class="message-display"></div>
+    </div>
+    
+    <script src="config.js"></script>
+    <script src="animation-utils.js"></script>
+    <script src="hub.js"></script>
+    <script src="slots.js"></script>
+    <script src="blackjack.js"></script>
+    <script src="roulette.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,899 @@
+/* Enhanced Slots game specific styles */
+
+#slots-screen {
+  background: linear-gradient(135deg, #ff9a56 0%, #ffad56 50%, #ffd56b 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+#slots-screen::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+      circle at 30% 20%,
+      rgba(255, 215, 0, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(255, 105, 180, 0.1) 0%,
+      transparent 50%
+    );
+  pointer-events: none;
+}
+
+.slots-machine {
+  background: linear-gradient(135deg, #ffc107, #ffb300);
+  border-radius: 20px;
+  padding: 40px;
+  margin: 20px auto;
+  max-width: 500px;
+  border: 5px solid #ff8f00;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.slots-machine::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 255, 255, 0.1) 10px,
+    rgba(255, 255, 255, 0.1) 20px
+  );
+  animation: shimmer 3s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+.slots-reels {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff, #f8f9fa);
+  border-radius: 15px;
+  border: 3px solid #ff8f00;
+  box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.reel {
+  width: 80px;
+  height: 80px;
+  background: white;
+  border: 3px solid #333;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.reel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.reel:hover::before {
+  opacity: 1;
+}
+
+.reel.spinning {
+  animation: reelSpin 0.1s linear infinite, reelBlur 0.1s linear infinite;
+  border-color: #ffd700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.8),
+    inset 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+@keyframes reelSpin {
+  0% {
+    transform: translateY(0) scale(0.95);
+  }
+  25% {
+    transform: translateY(-8px) scale(0.98);
+  }
+  50% {
+    transform: translateY(0) scale(0.95);
+  }
+  75% {
+    transform: translateY(8px) scale(0.98);
+  }
+  100% {
+    transform: translateY(0) scale(0.95);
+  }
+}
+
+@keyframes reelBlur {
+  0%,
+  100% {
+    filter: blur(1px);
+  }
+  50% {
+    filter: blur(3px);
+  }
+}
+
+@keyframes reelLand {
+  0% {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+@keyframes symbolReveal {
+  0% {
+    transform: scale(0.8) rotateY(90deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) rotateY(45deg);
+  }
+  100% {
+    transform: scale(1) rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+/* Symbol-specific styling */
+.reel.symbol-diamond {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  box-shadow: 0 0 15px rgba(33, 150, 243, 0.4);
+}
+
+.reel.symbol-seven {
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+  box-shadow: 0 0 15px rgba(255, 152, 0, 0.4);
+}
+
+.reel.symbol-money {
+  background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
+}
+
+.reel.symbol-slot {
+  background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+  box-shadow: 0 0 15px rgba(233, 30, 99, 0.4);
+}
+
+.reel.symbol-star {
+  background: linear-gradient(135deg, #fff9c4, #fff59d);
+  box-shadow: 0 0 15px rgba(255, 235, 59, 0.4);
+}
+
+/* Winning symbol highlighting */
+.reel.winning-symbol {
+  animation: winningSymbol 2s ease-in-out infinite;
+  position: relative;
+  z-index: 5;
+}
+
+.reel.glow-mega {
+  box-shadow: 0 0 25px #ffd700, 0 0 50px #ffd700, 0 0 75px #ffd700;
+}
+
+.reel.glow-high {
+  box-shadow: 0 0 20px #28a745, 0 0 40px #28a745;
+}
+
+.reel.glow-medium {
+  box-shadow: 0 0 15px #17a2b8, 0 0 30px #17a2b8;
+}
+
+.reel.glow-low {
+  box-shadow: 0 0 12px #ffc107, 0 0 25px #ffc107;
+}
+
+.reel.glow-bonus {
+  box-shadow: 0 0 10px #6f42c1, 0 0 20px #6f42c1;
+}
+
+@keyframes winningSymbol {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.spin-button {
+  background: linear-gradient(135deg, #ff6b35, #f7931e);
+  color: white;
+  border: none;
+  padding: 15px 40px;
+  border-radius: 50px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(247, 147, 30, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.spin-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.spin-button:hover::before {
+  left: 100%;
+}
+
+.spin-button:hover {
+  background: linear-gradient(135deg, #f7931e, #ff6b35);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(247, 147, 30, 0.6);
+}
+
+.spin-button:active {
+  transform: translateY(-1px);
+}
+
+.spin-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.spin-button.spinning-state {
+  animation: spinButtonPulse 1s ease-in-out infinite;
+}
+
+@keyframes spinButtonPulse {
+  0%,
+  100% {
+    background: linear-gradient(135deg, #6c757d, #545b62);
+  }
+  50% {
+    background: linear-gradient(135deg, #545b62, #495057);
+  }
+}
+
+/* Enhanced Payouts info */
+.payouts-info {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  padding: 25px;
+  margin-top: 25px;
+  border: 3px solid #ff8f00;
+  color: #333;
+  box-shadow: 0 8px 25px rgba(255, 143, 0, 0.3);
+}
+
+.payouts-info h3 {
+  margin-bottom: 20px;
+  color: #ff6b35;
+  text-align: center;
+  font-size: 1.4rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.payout-tier {
+  margin-bottom: 15px;
+  padding: 12px;
+  border-radius: 8px;
+  border-left: 4px solid;
+}
+
+.payout-tier.mega {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.2),
+    rgba(255, 223, 0, 0.1)
+  );
+  border-left-color: #ffd700;
+}
+
+.payout-tier.high {
+  background: linear-gradient(
+    135deg,
+    rgba(40, 167, 69, 0.2),
+    rgba(40, 167, 69, 0.1)
+  );
+  border-left-color: #28a745;
+}
+
+.payout-tier.pairs {
+  background: linear-gradient(
+    135deg,
+    rgba(23, 162, 184, 0.2),
+    rgba(23, 162, 184, 0.1)
+  );
+  border-left-color: #17a2b8;
+}
+
+.payout-tier.bonus {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 193, 7, 0.2),
+    rgba(255, 193, 7, 0.1)
+  );
+  border-left-color: #ffc107;
+}
+
+.payout-tier p {
+  margin-bottom: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.multiplier {
+  background: rgba(255, 143, 0, 0.8);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced Win/lose animations */
+.slots-machine.mega-win {
+  animation: megaWinPulse 3s ease-in-out;
+  border-color: #ffd700;
+  box-shadow: 0 0 50px rgba(255, 215, 0, 1), 0 0 100px rgba(255, 215, 0, 0.5);
+}
+
+.slots-machine.big-win {
+  animation: bigWinPulse 2s ease-in-out;
+  border-color: #28a745;
+  box-shadow: 0 0 30px rgba(40, 167, 69, 0.8);
+}
+
+.slots-machine.small-win {
+  animation: smallWinPulse 1s ease-in-out;
+  border-color: #17a2b8;
+  box-shadow: 0 0 20px rgba(23, 162, 184, 0.6);
+}
+
+.slots-machine.bonus-win {
+  animation: bonusWinPulse 1.5s ease-in-out;
+  border-color: #ffc107;
+  box-shadow: 0 0 25px rgba(255, 193, 7, 0.7);
+}
+
+.slots-machine.lose-spin {
+  animation: losePulse 0.5s ease-in-out;
+}
+
+@keyframes megaWinPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  }
+  15% {
+    transform: scale(1.08);
+    box-shadow: 0 0 60px rgba(255, 215, 0, 1), 0 0 120px rgba(255, 215, 0, 0.6);
+  }
+  30% {
+    transform: scale(1.05);
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.9);
+  }
+  45% {
+    transform: scale(1.08);
+    box-shadow: 0 0 60px rgba(255, 215, 0, 1), 0 0 120px rgba(255, 215, 0, 0.6);
+  }
+  60% {
+    transform: scale(1.03);
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.8);
+  }
+  75% {
+    transform: scale(1.06);
+    box-shadow: 0 0 55px rgba(255, 215, 0, 0.95);
+  }
+}
+
+@keyframes bigWinPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  }
+  25% {
+    transform: scale(1.05);
+    box-shadow: 0 0 40px rgba(40, 167, 69, 0.9);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 35px rgba(40, 167, 69, 0.8);
+  }
+  75% {
+    transform: scale(1.05);
+    box-shadow: 0 0 40px rgba(40, 167, 69, 0.9);
+  }
+}
+
+@keyframes smallWinPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 25px rgba(23, 162, 184, 0.7);
+  }
+}
+
+@keyframes bonusWinPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  33% {
+    transform: scale(1.03);
+    box-shadow: 0 0 30px rgba(255, 193, 7, 0.8);
+  }
+  66% {
+    transform: scale(1.01);
+    box-shadow: 0 0 20px rgba(255, 193, 7, 0.6);
+  }
+}
+
+@keyframes losePulse {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+/* Screen flash effect */
+@keyframes screenFlash {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Jackpot text animation */
+@keyframes jackpotText {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  80% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* Firework particle animation */
+@keyframes fireworkParticle {
+  0% {
+    transform: rotate(var(--rotation, 0deg)) translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--rotation, 0deg)) translateY(-100px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Sparkle animation */
+@keyframes sparkle {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1) rotate(180deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Bonus pulse animation */
+@keyframes bonusPulse {
+  0%,
+  100% {
+    box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: inset 0 4px 8px rgba(255, 193, 7, 0.3),
+      0 0 20px rgba(255, 193, 7, 0.5);
+  }
+}
+
+/* Enhanced Payout info display */
+.payout-info {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 15px 20px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  min-width: 200px;
+  text-align: center;
+}
+
+.payout-text.win {
+  border-color: #28a745;
+}
+
+.payout-text.lose {
+  border-color: #6c757d;
+}
+
+.win-amount {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #ffd700;
+  margin-bottom: 5px;
+}
+
+.win-name {
+  font-size: 0.9rem;
+  color: #28a745;
+  margin-bottom: 3px;
+}
+
+.win-multiplier {
+  font-size: 0.8rem;
+  color: #17a2b8;
+  background: rgba(23, 162, 184, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.payout-text.win.mega .win-amount {
+  color: #ffd700;
+  text-shadow: 0 0 10px #ffd700;
+  animation: goldGlow 1s ease-in-out infinite alternate;
+}
+
+.payout-text.win.high .win-amount {
+  color: #28a745;
+}
+
+.payout-text.win.medium .win-amount {
+  color: #17a2b8;
+}
+
+.payout-text.win.low .win-amount {
+  color: #ffc107;
+}
+
+.payout-text.win.bonus .win-amount {
+  color: #6f42c1;
+}
+
+.lose-message {
+  color: #dc3545;
+  font-weight: bold;
+  margin-bottom: 3px;
+}
+
+.lose-encouragement {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+@keyframes goldGlow {
+  0% {
+    text-shadow: 0 0 5px #ffd700;
+  }
+  100% {
+    text-shadow: 0 0 20px #ffd700, 0 0 30px #ffd700;
+  }
+}
+
+/* Fireworks animation for jackpots */
+.fireworks-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.firework {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  animation: explode 1s ease-out forwards;
+}
+
+.particle:nth-child(1) {
+  animation-delay: 0s;
+  transform: rotate(0deg);
+}
+.particle:nth-child(2) {
+  animation-delay: 0.1s;
+  transform: rotate(45deg);
+}
+.particle:nth-child(3) {
+  animation-delay: 0.2s;
+  transform: rotate(90deg);
+}
+.particle:nth-child(4) {
+  animation-delay: 0.3s;
+  transform: rotate(135deg);
+}
+.particle:nth-child(5) {
+  animation-delay: 0.4s;
+  transform: rotate(180deg);
+}
+.particle:nth-child(6) {
+  animation-delay: 0.5s;
+  transform: rotate(225deg);
+}
+.particle:nth-child(7) {
+  animation-delay: 0.6s;
+  transform: rotate(270deg);
+}
+.particle:nth-child(8) {
+  animation-delay: 0.7s;
+  transform: rotate(315deg);
+}
+
+@keyframes explode {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Enhanced Auto-spin controls */
+.auto-spin-controls {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 15px;
+  padding: 15px;
+  margin-top: 20px;
+  text-align: center;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.auto-spin-controls h4 {
+  margin-bottom: 10px;
+  color: white;
+  font-size: 1.1rem;
+}
+
+.auto-spin-button {
+  background: linear-gradient(135deg, #6c757d, #545b62);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin: 0 5px;
+  transition: all 0.3s ease;
+}
+
+.auto-spin-button:hover {
+  background: linear-gradient(135deg, #545b62, #495057);
+  transform: translateY(-1px);
+}
+
+.auto-spin-button.active {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+  box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+}
+
+/* Spin history display */
+.spin-history {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 20px;
+}
+
+.spin-history h4 {
+  color: white;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  margin: 3px 0;
+  border-radius: 5px;
+  font-size: 0.9rem;
+}
+
+.history-item.mega {
+  background: rgba(255, 215, 0, 0.2);
+  border-left: 3px solid #ffd700;
+}
+
+.history-item.high {
+  background: rgba(40, 167, 69, 0.2);
+  border-left: 3px solid #28a745;
+}
+
+.history-item.medium {
+  background: rgba(23, 162, 184, 0.2);
+  border-left: 3px solid #17a2b8;
+}
+
+.history-item.low {
+  background: rgba(255, 193, 7, 0.2);
+  border-left: 3px solid #ffc107;
+}
+
+.history-item.none {
+  background: rgba(108, 117, 125, 0.2);
+  border-left: 3px solid #6c757d;
+}
+
+.history-reels {
+  font-weight: bold;
+}
+
+.history-result {
+  color: #28a745;
+  font-weight: bold;
+}
+
+/* Slot machine decorations */
+.slots-machine::after {
+  content: "🎰";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2rem;
+  background: #ffd700;
+  padding: 5px 10px;
+  border-radius: 50%;
+  border: 3px solid #ff8f00;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .slots-machine {
+    padding: 25px;
+    margin: 15px;
+  }
+
+  .slots-reels {
+    gap: 10px;
+    padding: 15px;
+  }
+
+  .reel {
+    width: 65px;
+    height: 65px;
+    font-size: 2.5rem;
+  }
+
+  .spin-button {
+    padding: 12px 30px;
+    font-size: 1.1rem;
+  }
+
+  .payouts-info {
+    padding: 15px;
+    font-size: 0.9rem;
+  }
+
+  .payout-tier p {
+    font-size: 0.9rem;
+  }
+
+  .payout-info {
+    top: 10px;
+    right: 10px;
+    padding: 10px 15px;
+    min-width: 150px;
+    font-size: 0.85rem;
+  }
+
+  .win-amount {
+    font-size: 1.1rem;
+  }
+
+  .auto-spin-controls {
+    padding: 10px;
+  }
+
+  .auto-spin-button {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    margin: 2px;
+  }
+}
