@@ -1,3 +1,7 @@
+import { Achievements } from "./utils/achievements.js";
+import { Toasts } from "./utils/toasts.js";
+import { Paytable } from "./utils/paytable.js";
+
 class SlotsGold {
   constructor(targetContainer = null, config = null) {
     this.sg_config =
@@ -845,3 +849,7 @@ document.addEventListener("DOMContentLoaded", () => {
 window.createSlotsGold = function (targetContainer, config) {
   return new SlotsGold(targetContainer, config);
 };
+
+export function createSlotsGold(targetContainer, config) {
+  return new SlotsGold(targetContainer, config);
+}
