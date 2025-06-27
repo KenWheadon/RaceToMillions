@@ -1,86 +1,83 @@
-// slots_gold_config.js - Configuration file for Gold Slots Game
-
 const SG_CONFIG = {
-  // Game identification
   gameId: "slots_gold",
   gameName: "Golden Slots",
   version: "1.0.0",
 
-  // Symbol configuration with rarity and payouts
   symbols: [
     {
       name: "💎",
-      rarity: 0.05,
+      rarity: 0.02, // Reduced to lower RTP
       payout: 50,
       description: "Diamond - Ultra Rare",
+      multipliers: { 3: 3, 4: 6, 5: 12 }, // Payout multipliers for matches
     },
     {
       name: "👑",
-      rarity: 0.08,
+      rarity: 0.05, // Reduced
       payout: 25,
       description: "Crown - Very Rare",
+      multipliers: { 3: 3, 4: 6, 5: 12 },
     },
     {
       name: "💰",
-      rarity: 0.12,
+      rarity: 0.08, // Reduced
       payout: 15,
       description: "Money Bag - Rare",
+      multipliers: { 3: 3, 4: 6, 5: 12 },
     },
     {
       name: "🎰",
       rarity: 0.15,
       payout: 10,
       description: "Slot Machine - Uncommon",
+      multipliers: { 3: 3, 4: 6, 5: 12 },
     },
     {
       name: "🔥",
-      rarity: 0.2,
+      rarity: 0.25, // Increased
       payout: 5,
       description: "Fire - Common",
+      multipliers: { 3: 3, 4: 6, 5: 12 },
     },
     {
       name: "⭐",
-      rarity: 0.4,
+      rarity: 0.45, // Increased
       payout: 2,
       description: "Star - Very Common",
+      multipliers: { 3: 3, 4: 6, 5: 12 },
     },
   ],
 
-  // Game mechanics
   mechanics: {
     reelCount: 5,
     paylineCount: 1,
-    minMatchCount: 2,
-    maxMatchCount: 3,
-    baseRTP: 0.5, // Return to Player percentage
+    minMatchCount: 3, // Updated from 2
+    maxMatchCount: 5, // Updated from 3
+    baseRTP: 0.5,
     startingGold: 10,
     spinCost: 1,
   },
 
-  // Betting system
   betting: {
     betAmounts: [1, 100, 10000],
     betLabels: ["$1", "$100", "$10,000"],
     defaultBetIndex: 0,
   },
 
-  // Prestige system
   prestige: {
-    baseCosts: [10, 100, 1000], // First 3 prestige costs
-    costMultiplier: 10, // Each subsequent prestige costs 10x more
-    bonusPerPrestige: 0.5, // 50% bonus per prestige level
-    maxDisplayedCost: 3, // Show specific costs for first 3 levels
+    baseCosts: [10, 100, 1000],
+    costMultiplier: 10,
+    bonusPerPrestige: 0.5,
+    maxDisplayedCost: 3,
   },
 
-  // Level system
   leveling: {
-    baseExpNeeded: 1, // EXP needed to complete level 0
-    expFormula: "level * 3 + 1", // Formula: current_level * 3 + 1
-    bonusPerLevel: 0.05, // 5% bonus per level
+    baseExpNeeded: 1,
+    expFormula: "level * 3 + 1",
+    bonusPerLevel: 0.05,
     expPerSpin: 1,
   },
 
-  // Begging system (when player runs out of money)
   begging: {
     enabled: true,
     chances: [
@@ -103,31 +100,23 @@ const SG_CONFIG = {
     ],
   },
 
-  // Achievement system
   achievements: {
-    // Symbol-based achievements (auto-generated)
     symbolAchievements: {
-      match2Multiplier: 1, // Reward = symbol payout * 1
-      match3Multiplier: 2, // Reward = symbol payout * 2
+      match3Multiplier: 2, // Updated from match2
+      match4Multiplier: 4,
+      match5Multiplier: 8,
     },
-
-    // Money milestones
     moneyMilestones: [100, 500, 1000, 5000, 10000, 50000, 100000],
-    moneyRewardMultiplier: 0.1, // Reward = milestone * 0.1
-
-    // Streak achievements
+    moneyRewardMultiplier: 0.1,
     winStreakTargets: [5, 10, 20, 50, 100],
     loseStreakTargets: [5, 10, 20, 50, 100],
-    streakRewardMultiplier: 2, // Reward = streak count * 2
+    streakRewardMultiplier: 2,
   },
 
-  // Toast/notification system
   toasts: {
-    duration: 3000, // 3 seconds
+    duration: 3000,
     animationDuration: 300,
     maxVisible: 5,
-
-    // Toast messages for different scenarios
     neutralMessages: [
       "Lucky spin!",
       "Keep going!",
@@ -145,7 +134,6 @@ const SG_CONFIG = {
       "Spin those symbols!",
       "Victory awaits!",
     ],
-
     bigWinMessages: [
       "INCREDIBLE WIN!",
       "JACKPOT!",
@@ -158,7 +146,6 @@ const SG_CONFIG = {
       "GOLDEN MOMENT!",
       "LEGENDARY SPIN!",
     ],
-
     losingStreakMessages: [
       "Don't give up!",
       "Your luck will change!",
@@ -172,51 +159,45 @@ const SG_CONFIG = {
     ],
   },
 
-  // UI Configuration
   ui: {
     colors: {
-      primary: "#ffd700", // Gold
-      secondary: "#ffed4e", // Light Gold
-      background: "#2c1810", // Dark Brown
+      primary: "#ffd700",
+      secondary: "#ffed4e",
+      background: "#2c1810",
       backgroundLight: "#3d2817",
-      success: "#00ff00", // Green
-      error: "#ff6b6b", // Red
-      achievement: "#ff00ff", // Magenta
-      levelup: "#00ffff", // Cyan
-      prestige: "#ffd700", // Gold
+      success: "#00ff00",
+      error: "#ff6b6b",
+      achievement: "#ff00ff",
+      levelup: "#00ffff",
+      prestige: "#ffd700",
     },
-
     animations: {
-      spinDuration: 800, // Milliseconds
-      reelSpinInterval: 50, // Symbol change interval during spin
-      reelStaggerDelay: 100, // Delay between each reel starting
+      spinDuration: 800,
+      reelSpinInterval: 50,
+      reelStaggerDelay: 100,
       toastSlideDistance: "100%",
     },
   },
 
-  // Save/Load system configuration
   saveSystem: {
     enabled: true,
     saveKey: "slots_gold_save",
-    autoSaveInterval: 30000, // Auto-save every 30 seconds
+    autoSaveInterval: 30000,
     saveVersion: 1,
   },
 
-  // Debug and development
   debug: {
     enabled: false,
-    logLevel: "info", // 'debug', 'info', 'warn', 'error'
+    logLevel: "info",
     showHitRates: false,
-    godMode: false, // Infinite money, always win, etc.
+    godMode: false,
   },
 };
 
-// Export for use in other files
 if (typeof module !== "undefined" && module.exports) {
   module.exports = SG_CONFIG;
 }
 
-// Global access in browser
 if (typeof window !== "undefined") {
   window.SG_CONFIG = SG_CONFIG;
 }

@@ -10,6 +10,7 @@
   border-radius: 15px;
   box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
   position: relative;
+  overflow: hidden; /* Ensure sidebars stay within container */
 }
 
 .sg-header {
@@ -22,23 +23,28 @@
   position: absolute;
   top: 0;
   left: 0;
-  padding: 8px 16px;
-  background: rgba(255, 215, 0, 0.1);
-  border: 2px solid #ffd700;
-  border-radius: 10px;
-  color: #ffd700;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #ffd700, #ffed4e);
+  border: 3px solid #ffd700;
+  color: #2c1810;
   cursor: pointer;
-  font-size: 0.9em;
+  font-size: 1.2em;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sg-paytable-btn:hover {
-  background: rgba(255, 215, 0, 0.2);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
 }
 
 .sg-header h1 {
   font-size: 2.2em;
-  margin: 0 0 10px 0;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   background: linear-gradient(45deg, #ffd700, #ffed4e);
   -webkit-background-clip: text;
@@ -78,6 +84,14 @@
   transform: translateX(-50%) translateY(-8px);
 }
 
+.sg-win-display.sg-lose-show {
+  background: linear-gradient(45deg, #ff6b6b, #ff8c8c);
+  color: #fff;
+  box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+  opacity: 1;
+  transform: translateX(-50%) translateY(-8px);
+}
+
 .sg-reels {
   display: flex;
   justify-content: center;
@@ -102,6 +116,27 @@
 
 .sg-reel.sg-spinning {
   animation: sg-spin 0.1s infinite linear;
+}
+
+.sg-reel.sg-revealed {
+  background: linear-gradient(145deg, #2c1810, #3d2817);
+  border-color: #00ff00;
+  box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.3), 0 0 15px rgba(0, 255, 0, 0.2);
+}
+
+.sg-reel.sg-win-highlight {
+  background: linear-gradient(145deg, #ffd700, #ffed4e);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+  animation: sg-win-pulse 0.5s alternate infinite;
+}
+
+@keyframes sg-win-pulse {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.05);
+  }
 }
 
 @keyframes sg-spin {
@@ -167,10 +202,11 @@
   color: #ffd700;
 }
 
-/* New SPIN section styling */
 .sg-spin-section {
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 20px;
   margin-bottom: 20px;
 }
 
@@ -280,12 +316,10 @@
   transform: translateY(0);
 }
 
-/* New prestige section styling */
 .sg-prestige-section {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .sg-prestige-btn {
@@ -320,18 +354,17 @@
   font-size: 0.9em;
   font-weight: bold;
   color: #00ff00;
-  text-align: center;
   background: rgba(0, 255, 0, 0.1);
   padding: 4px 12px;
   border-radius: 8px;
   border: 1px solid #00ff00;
+  white-space: nowrap;
 }
 
-/* Achievements Toggle Button */
 .sg-achievements-toggle {
-  position: fixed;
-  top: 20px;
-  right: 20px;
+  position: absolute;
+  top: 0;
+  right: 0;
   width: 50px;
   height: 50px;
   border-radius: 50%;
@@ -350,20 +383,18 @@
   box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
 }
 
-/* Hide achievements toggle when sidebar is open */
 .sg-achievements-toggle.sg-toggle-hidden {
   opacity: 0;
   transform: scale(0.5);
   pointer-events: none;
 }
 
-/* Achievements Sidebar */
 .sg-achievements-sidebar {
-  position: fixed;
+  position: absolute;
   top: 0;
-  right: -400px;
-  width: 380px;
-  height: 100vh;
+  right: -100%;
+  width: 100%;
+  height: 100%;
   background: linear-gradient(145deg, #2c1810, #1a0f08);
   border-left: 3px solid #ffd700;
   z-index: 1000;
@@ -444,13 +475,12 @@
   font-size: 0.9em;
 }
 
-/* Paytable Sidebar */
 .sg-paytable-sidebar {
-  position: fixed;
+  position: absolute;
   top: 0;
-  left: -400px;
-  width: 380px;
-  height: 100vh;
+  left: -100%;
+  width: 100%;
+  height: 100%;
   background: linear-gradient(145deg, #2c1810, #1a0f08);
   border-right: 3px solid #ffd700;
   z-index: 1000;
@@ -511,6 +541,12 @@
   border: 1px solid #ffd700;
 }
 
+.sg-paytable-row.sg-latest-win {
+  background: rgba(255, 215, 0, 0.3);
+  border-color: #00ff00;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
 .sg-symbol-display {
   font-size: 1.8em;
   margin-right: 15px;
@@ -535,22 +571,19 @@
   margin: 20px;
 }
 
-/* Overlay and popup styles */
 .sg-overlay {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.8);
-  z-index: 1000;
+  z-index: 999;
   display: none;
-  justify-content: center;
-  align-items: center;
 }
 
 .sg-overlay.sg-overlay-show {
-  display: flex;
+  display: block;
 }
 
 .sg-beg-popup {
@@ -628,9 +661,8 @@
   transform: translateX(0);
 }
 
-/* Particle system */
 .sg-particles-container {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -657,92 +689,75 @@
   }
 }
 
-/* Mobile responsiveness */
 @media (max-width: 768px) {
   .sg-game-container {
     padding: 15px;
   }
-
   .sg-reels {
     flex-wrap: wrap;
     justify-content: center;
   }
-
   .sg-reel {
     width: 60px;
     height: 60px;
     font-size: 2em;
     margin: 3px;
   }
-
   .sg-header h1 {
     font-size: 1.8em;
   }
-
   .sg-betting-section {
     flex-direction: column;
     gap: 15px;
     text-align: center;
   }
-
   .sg-progression {
     flex-direction: column;
     gap: 10px;
   }
-
   .sg-level-info {
     min-width: auto;
   }
-
   .sg-action-buttons {
     flex-direction: column;
     align-items: center;
   }
-
   .sg-prestige-section {
     width: 100%;
+    justify-content: center;
   }
-
+  .sg-spin-section {
+    flex-direction: column;
+    gap: 15px;
+  }
   .sg-spin-btn {
     padding: 12px 30px;
     font-size: 1.1em;
   }
-
   .sg-achievements-sidebar,
   .sg-paytable-sidebar {
-    width: 90%;
+    width: 100%;
   }
-
-  .sg-achievements-sidebar {
-    right: -90%;
-  }
-
-  .sg-paytable-sidebar {
-    left: -90%;
-  }
-
   .sg-achievements-toggle {
     top: 15px;
     right: 15px;
     width: 45px;
     height: 45px;
   }
-
+  .sg-paytable-btn {
+    top: 15px;
+    left: 15px;
+    width: 45px;
+    height: 45px;
+  }
   .sg-toast-container {
     top: 10px;
     right: 10px;
     left: 10px;
   }
-
   .sg-toast {
     min-width: auto;
   }
-
-  .sg-paytable-btn {
-    position: static;
-    margin-bottom: 10px;
-  }
-
   .sg-beg-popup {
     margin: 20px;
     max-width: none;
