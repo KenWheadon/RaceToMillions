@@ -63,6 +63,12 @@
       </div>
     </div>
 
+    <!-- FIXED: Set SlotsGoldAutoInit before loading slots-gold.js -->
+    <script>
+      // Disable auto-initialization of slots game
+      window.SlotsGoldAutoInit = false;
+    </script>
+
     <!-- External JavaScript Files -->
     <script src="slots-gold-config.js"></script>
     <script type="module" src="arcade-wrapper.js"></script>

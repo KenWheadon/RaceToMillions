@@ -42,9 +42,83 @@ export class Paytable {
     this.gameContainer = gameContainer;
     this.latestWin = null;
 
+    this.injectStyles();
     this.createUI();
     this.bindEvents();
     this.updateContent();
+  }
+
+  injectStyles() {
+    // Check if styles are already injected
+    if (document.getElementById("sg-paytable-styles")) return;
+
+    const style = document.createElement("style");
+    style.id = "sg-paytable-styles";
+    style.textContent = `
+      .sg-paytable-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .sg-paytable-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(255, 215, 0, 0.1);
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #ffd700;
+        box-sizing: border-box;
+      }
+
+      .sg-paytable-row.sg-latest-win {
+        background: rgba(255, 215, 0, 0.3);
+        border-color: #00ff00;
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+      }
+
+      .sg-symbol-display {
+        font-size: 1.8em;
+        margin-right: 15px;
+      }
+
+      .sg-payout-info {
+        text-align: right;
+      }
+
+      .sg-payout-info div {
+        margin-bottom: 3px;
+        color: #ffd700;
+        font-size: 0.9em;
+      }
+
+      .sg-rules-section {
+        margin-top: 20px;
+        padding: 15px;
+        background: rgba(255, 215, 0, 0.1);
+        border-radius: 8px;
+        border: 1px solid #ffd700;
+      }
+
+      .sg-rules-section h4 {
+        margin: 0 0 10px 0;
+        color: #ffd700;
+      }
+
+      .sg-rules-section ul {
+        margin: 0;
+        padding-left: 20px;
+        color: #cccccc;
+      }
+
+      .sg-rules-section li {
+        margin-bottom: 5px;
+        font-size: 0.9em;
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   createUI() {
@@ -216,6 +290,23 @@ export class Paytable {
       rtpElement.innerHTML = `<strong>Return to Player: ${(
         newRTP * 100
       ).toFixed(1)}%</strong>`;
+    }
+  }
+
+  destroy() {
+    this.hide();
+    const button = this.gameContainer.querySelector(
+      this.config.ui.buttonSelector
+    );
+    const sidebar = this.gameContainer.querySelector(
+      this.config.ui.sidebarSelector
+    );
+
+    if (button && button.parentNode) {
+      button.parentNode.removeChild(button);
+    }
+    if (sidebar && sidebar.parentNode) {
+      sidebar.parentNode.removeChild(sidebar);
     }
   }
 }

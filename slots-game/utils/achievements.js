@@ -41,8 +41,86 @@ export class Achievements {
     this.onRewardCallback = null;
     this.onUnlockCallback = null;
 
+    this.injectStyles();
     this.createUI();
     this.bindEvents();
+  }
+
+  injectStyles() {
+    // Check if styles are already injected
+    if (document.getElementById("sg-achievements-styles")) return;
+
+    const style = document.createElement("style");
+    style.id = "sg-achievements-styles";
+    style.textContent = `
+      .sg-achievement {
+        background: rgba(255, 215, 0, 0.1);
+        border: 1px solid #ffd700;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+      }
+
+      .sg-achievement.sg-unlocked {
+        background: rgba(255, 215, 0, 0.2);
+        border-color: #00ff00;
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+      }
+
+      .sg-achievement.sg-locked {
+        opacity: 0.6;
+      }
+
+      .sg-achievement h4 {
+        margin: 0 0 8px 0;
+        color: #ffd700;
+        font-size: 1.1em;
+      }
+
+      .sg-achievement p {
+        margin: 0 0 8px 0;
+        color: #cccccc;
+        font-size: 0.9em;
+      }
+
+      .sg-reward {
+        color: #00ff00;
+        font-weight: bold;
+        font-size: 0.9em;
+      }
+
+      .sg-rarity {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        font-weight: bold;
+        margin-left: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffd700;
+      }
+
+      .sg-particle {
+        position: absolute;
+        font-size: 1.5em;
+        animation: sg-particle-float 3s ease-out forwards;
+        pointer-events: none;
+      }
+
+      @keyframes sg-particle-float {
+        0% {
+          opacity: 1;
+          transform: translate(0, 0) scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(var(--end-x, 0), var(--end-y, -100px)) scale(0.5);
+        }
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   initializeAchievements() {
@@ -321,5 +399,22 @@ export class Achievements {
       achievement.unlocked = false;
     });
     this.updateDisplay();
+  }
+
+  destroy() {
+    this.hide();
+    const toggle = this.gameContainer.querySelector(
+      this.config.ui.toggleSelector
+    );
+    const sidebar = this.gameContainer.querySelector(
+      this.config.ui.sidebarSelector
+    );
+
+    if (toggle && toggle.parentNode) {
+      toggle.parentNode.removeChild(toggle);
+    }
+    if (sidebar && sidebar.parentNode) {
+      sidebar.parentNode.removeChild(sidebar);
+    }
   }
 }

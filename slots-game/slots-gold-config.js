@@ -101,8 +101,12 @@ const SG_CONFIG = {
   },
 
   achievements: {
+    // FIXED: Moved multipliers to root level for easier access
+    match3Multiplier: 2,
+    match4Multiplier: 4,
+    match5Multiplier: 8,
     symbolAchievements: {
-      match3Multiplier: 2, // Updated from match2
+      match3Multiplier: 2, // Keep this for backwards compatibility
       match4Multiplier: 4,
       match5Multiplier: 8,
     },
