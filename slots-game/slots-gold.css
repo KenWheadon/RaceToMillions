@@ -46,20 +46,6 @@
   background-clip: text;
 }
 
-.sg-prestige-info {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
-  font-size: 1.1em;
-  font-weight: bold;
-}
-
-.sg-prestige-bonus {
-  color: #00ff00;
-  font-size: 0.9em;
-}
-
 .sg-machine {
   background: linear-gradient(145deg, #3d2817, #2c1810);
   border: 3px solid #ffd700;
@@ -181,6 +167,36 @@
   color: #ffd700;
 }
 
+/* New SPIN section styling */
+.sg-spin-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.sg-spin-btn {
+  padding: 15px 40px;
+  font-size: 1.3em;
+  font-weight: bold;
+  border: 3px solid #ffd700;
+  border-radius: 15px;
+  background: linear-gradient(145deg, #ffd700, #ffed4e);
+  color: #2c1810;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.sg-spin-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+}
+
+.sg-spin-btn:active {
+  transform: translateY(-1px);
+}
+
 .sg-controls {
   margin-bottom: 20px;
 }
@@ -239,10 +255,39 @@
   justify-content: center;
   gap: 15px;
   flex-wrap: wrap;
+  align-items: flex-start;
 }
 
-.sg-spin-btn,
-.sg-beg-btn,
+.sg-beg-btn {
+  padding: 12px 25px;
+  font-size: 1.1em;
+  font-weight: bold;
+  border: 3px solid #a0522d;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #8b4513, #a0522d);
+  color: #ffd700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.sg-beg-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(160, 82, 45, 0.4);
+}
+
+.sg-beg-btn:active {
+  transform: translateY(0);
+}
+
+/* New prestige section styling */
+.sg-prestige-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
 .sg-prestige-btn {
   padding: 12px 25px;
   font-size: 1.1em;
@@ -256,15 +301,11 @@
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.sg-spin-btn:hover,
-.sg-beg-btn:hover,
 .sg-prestige-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
 }
 
-.sg-spin-btn:active,
-.sg-beg-btn:active,
 .sg-prestige-btn:active {
   transform: translateY(0);
 }
@@ -275,10 +316,15 @@
   transform: none;
 }
 
-.sg-beg-btn {
-  background: linear-gradient(145deg, #8b4513, #a0522d);
-  color: #ffd700;
-  border-color: #a0522d;
+.sg-prestige-bonus-display {
+  font-size: 0.9em;
+  font-weight: bold;
+  color: #00ff00;
+  text-align: center;
+  background: rgba(0, 255, 0, 0.1);
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid #00ff00;
 }
 
 /* Achievements Toggle Button */
@@ -302,6 +348,13 @@
 .sg-achievements-toggle:hover {
   transform: scale(1.1);
   box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+}
+
+/* Hide achievements toggle when sidebar is open */
+.sg-achievements-toggle.sg-toggle-hidden {
+  opacity: 0;
+  transform: scale(0.5);
+  pointer-events: none;
 }
 
 /* Achievements Sidebar */
@@ -391,6 +444,97 @@
   font-size: 0.9em;
 }
 
+/* Paytable Sidebar */
+.sg-paytable-sidebar {
+  position: fixed;
+  top: 0;
+  left: -400px;
+  width: 380px;
+  height: 100vh;
+  background: linear-gradient(145deg, #2c1810, #1a0f08);
+  border-right: 3px solid #ffd700;
+  z-index: 1000;
+  transition: left 0.3s ease;
+  overflow-y: auto;
+  box-shadow: 5px 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.sg-paytable-sidebar.sg-sidebar-open {
+  left: 0;
+}
+
+.sg-paytable-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 2px solid #ffd700;
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.sg-paytable-header h3 {
+  margin: 0;
+  color: #ffd700;
+  font-size: 1.3em;
+}
+
+.sg-paytable-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #ff4757;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.sg-paytable-content {
+  padding: 20px;
+}
+
+.sg-paytable-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.sg-paytable-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 215, 0, 0.1);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ffd700;
+}
+
+.sg-symbol-display {
+  font-size: 1.8em;
+  margin-right: 15px;
+}
+
+.sg-payout-info {
+  text-align: right;
+}
+
+.sg-payout-info div {
+  margin-bottom: 3px;
+  color: #ffd700;
+  font-size: 0.9em;
+}
+
+.sg-rtp-info {
+  background: rgba(0, 255, 0, 0.1);
+  border: 2px solid #00ff00;
+  padding: 15px;
+  border-radius: 10px;
+  color: #00ff00;
+  margin: 20px;
+}
+
 /* Overlay and popup styles */
 .sg-overlay {
   position: fixed;
@@ -409,8 +553,7 @@
   display: flex;
 }
 
-.sg-beg-popup,
-.sg-paytable-popup {
+.sg-beg-popup {
   background: linear-gradient(145deg, #3d2817, #2c1810);
   border: 3px solid #ffd700;
   border-radius: 20px;
@@ -456,46 +599,6 @@
   border-radius: 10px;
   cursor: pointer;
   margin-top: 15px;
-}
-
-.sg-paytable-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.sg-paytable-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: rgba(255, 215, 0, 0.1);
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #ffd700;
-}
-
-.sg-symbol-display {
-  font-size: 1.8em;
-  margin-right: 15px;
-}
-
-.sg-payout-info {
-  text-align: right;
-}
-
-.sg-payout-info div {
-  margin-bottom: 3px;
-  color: #ffd700;
-  font-size: 0.9em;
-}
-
-.sg-rtp-info {
-  background: rgba(0, 255, 0, 0.1);
-  border: 2px solid #00ff00;
-  padding: 15px;
-  border-radius: 10px;
-  color: #00ff00;
 }
 
 .sg-toast-container {
@@ -596,9 +699,26 @@
     align-items: center;
   }
 
-  .sg-achievements-sidebar {
+  .sg-prestige-section {
+    width: 100%;
+  }
+
+  .sg-spin-btn {
+    padding: 12px 30px;
+    font-size: 1.1em;
+  }
+
+  .sg-achievements-sidebar,
+  .sg-paytable-sidebar {
     width: 90%;
+  }
+
+  .sg-achievements-sidebar {
     right: -90%;
+  }
+
+  .sg-paytable-sidebar {
+    left: -90%;
   }
 
   .sg-achievements-toggle {
@@ -623,8 +743,7 @@
     margin-bottom: 10px;
   }
 
-  .sg-beg-popup,
-  .sg-paytable-popup {
+  .sg-beg-popup {
     margin: 20px;
     max-width: none;
   }

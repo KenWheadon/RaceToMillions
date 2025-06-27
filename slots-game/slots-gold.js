@@ -117,12 +117,6 @@ class SlotsGold {
             <div class="sg-header">
                 <button id="sg-paytable-btn" class="sg-paytable-btn">📊 Pay Table</button>
                 <h1>🎰 Golden Slots</h1>
-                <div class="sg-prestige-info">
-                    👑 Prestige <span id="sg-prestige">${
-                      this.sg_state.prestige
-                    }</span>
-                    <span class="sg-prestige-bonus">+<span id="sg-prestige-bonus">0</span>% Bonus</span>
-                </div>
             </div>
 
             <div class="sg-machine">
@@ -147,6 +141,12 @@ class SlotsGold {
                         <span class="sg-exp-text" id="sg-exp-text">EXP: 0/1</span>
                     </div>
                 </div>
+            </div>
+
+            <div class="sg-spin-section">
+                <button id="sg-spin-btn" class="sg-spin-btn">SPIN (${
+                  this.sg_config.betting.betLabels[this.sg_state.currentBet]
+                })</button>
             </div>
 
             <div class="sg-controls">
@@ -175,13 +175,15 @@ class SlotsGold {
                 </div>
                 
                 <div class="sg-action-buttons">
-                    <button id="sg-spin-btn" class="sg-spin-btn">SPIN (${
-                      this.sg_config.betting.betLabels[this.sg_state.currentBet]
-                    })</button>
                     <button id="sg-beg-btn" class="sg-beg-btn" style="display: none;">BEG</button>
-                    <button id="sg-prestige-btn" class="sg-prestige-btn">
-                        PRESTIGE (${this.getPrestigeCost()})
-                    </button>
+                    <div class="sg-prestige-section">
+                        <button id="sg-prestige-btn" class="sg-prestige-btn">
+                            PRESTIGE (${this.getPrestigeCost()})
+                        </button>
+                        <div class="sg-prestige-bonus-display">
+                            👑 +<span id="sg-prestige-bonus">0</span>% Bonus
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -195,6 +197,19 @@ class SlotsGold {
                 <div id="sg-achievements-list" class="sg-achievements-list"></div>
             </div>
 
+            <div id="sg-paytable-sidebar" class="sg-paytable-sidebar">
+                <div class="sg-paytable-header">
+                    <h3>📊 Pay Table</h3>
+                    <button id="sg-paytable-close" class="sg-paytable-close">✕</button>
+                </div>
+                <div id="sg-paytable-content" class="sg-paytable-content"></div>
+                <div class="sg-rtp-info">
+                    <strong>Return to Player: ${(
+                      this.sg_config.mechanics.baseRTP * 100
+                    ).toFixed(1)}%</strong>
+                </div>
+            </div>
+
             <div id="sg-beg-overlay" class="sg-overlay">
                 <div class="sg-beg-popup">
                     <h3>💸 Begging Corner</h3>
@@ -202,19 +217,6 @@ class SlotsGold {
                     <button id="sg-beg-action" class="sg-beg-action">Ask for Charity</button>
                     <div id="sg-beg-result"></div>
                     <button id="sg-beg-close" class="sg-close-btn">Close</button>
-                </div>
-            </div>
-
-            <div id="sg-paytable-overlay" class="sg-overlay">
-                <div class="sg-paytable-popup">
-                    <h3>📊 Pay Table</h3>
-                    <div id="sg-paytable-content"></div>
-                    <div class="sg-rtp-info">
-                        <strong>Return to Player: ${(
-                          this.sg_config.mechanics.baseRTP * 100
-                        ).toFixed(1)}%</strong>
-                    </div>
-                    <button id="sg-paytable-close" class="sg-close-btn">Close</button>
                 </div>
             </div>
 
@@ -246,10 +248,10 @@ class SlotsGold {
       .addEventListener("click", () => this.prestige());
     this.gameContainer
       .querySelector("#sg-paytable-btn")
-      .addEventListener("click", () => this.showPaytablePopup());
+      .addEventListener("click", () => this.showPaytableSidebar());
     this.gameContainer
       .querySelector("#sg-paytable-close")
-      .addEventListener("click", () => this.hidePaytablePopup());
+      .addEventListener("click", () => this.hidePaytableSidebar());
 
     // Achievements sidebar
     this.gameContainer
@@ -275,29 +277,35 @@ class SlotsGold {
         }
       });
 
-    this.gameContainer
-      .querySelector("#sg-paytable-overlay")
-      .addEventListener("click", (e) => {
-        if (e.target.classList.contains("sg-overlay")) {
-          this.hidePaytablePopup();
-        }
-      });
-
-    // Close sidebar when clicking outside
+    // Close sidebars when clicking outside
     document.addEventListener("click", (e) => {
-      const sidebar = this.gameContainer.querySelector(
+      const achievementsSidebar = this.gameContainer.querySelector(
         "#sg-achievements-sidebar"
       );
-      const toggle = this.gameContainer.querySelector(
+      const achievementsToggle = this.gameContainer.querySelector(
         "#sg-achievements-toggle"
       );
+      const paytableSidebar = this.gameContainer.querySelector(
+        "#sg-paytable-sidebar"
+      );
+      const paytableBtn = this.gameContainer.querySelector("#sg-paytable-btn");
 
+      // Close achievements sidebar
       if (
-        sidebar.classList.contains("sg-sidebar-open") &&
-        !sidebar.contains(e.target) &&
-        !toggle.contains(e.target)
+        achievementsSidebar.classList.contains("sg-sidebar-open") &&
+        !achievementsSidebar.contains(e.target) &&
+        !achievementsToggle.contains(e.target)
       ) {
         this.hideAchievementsSidebar();
+      }
+
+      // Close paytable sidebar
+      if (
+        paytableSidebar.classList.contains("sg-sidebar-open") &&
+        !paytableSidebar.contains(e.target) &&
+        !paytableBtn.contains(e.target)
+      ) {
+        this.hidePaytableSidebar();
       }
     });
   }
@@ -306,13 +314,27 @@ class SlotsGold {
     const sidebar = this.gameContainer.querySelector(
       "#sg-achievements-sidebar"
     );
+    const toggle = this.gameContainer.querySelector("#sg-achievements-toggle");
     sidebar.classList.add("sg-sidebar-open");
+    toggle.classList.add("sg-toggle-hidden");
   }
 
   hideAchievementsSidebar() {
     const sidebar = this.gameContainer.querySelector(
       "#sg-achievements-sidebar"
     );
+    const toggle = this.gameContainer.querySelector("#sg-achievements-toggle");
+    sidebar.classList.remove("sg-sidebar-open");
+    toggle.classList.remove("sg-toggle-hidden");
+  }
+
+  showPaytableSidebar() {
+    const sidebar = this.gameContainer.querySelector("#sg-paytable-sidebar");
+    sidebar.classList.add("sg-sidebar-open");
+  }
+
+  hidePaytableSidebar() {
+    const sidebar = this.gameContainer.querySelector("#sg-paytable-sidebar");
     sidebar.classList.remove("sg-sidebar-open");
   }
 
@@ -332,13 +354,13 @@ class SlotsGold {
   }
 
   showPaytablePopup() {
-    const overlay = this.gameContainer.querySelector("#sg-paytable-overlay");
-    overlay.classList.add("sg-overlay-show");
+    // This method is kept for backward compatibility but now shows sidebar
+    this.showPaytableSidebar();
   }
 
   hidePaytablePopup() {
-    const overlay = this.gameContainer.querySelector("#sg-paytable-overlay");
-    overlay.classList.remove("sg-overlay-show");
+    // This method is kept for backward compatibility but now hides sidebar
+    this.hidePaytableSidebar();
   }
 
   async spin() {
@@ -661,8 +683,6 @@ class SlotsGold {
       this.sg_state.gold.toFixed(2);
     this.gameContainer.querySelector("#sg-level").textContent =
       this.sg_state.level;
-    this.gameContainer.querySelector("#sg-prestige").textContent =
-      this.sg_state.prestige;
 
     // Update bonus displays
     const levelBonus = (
