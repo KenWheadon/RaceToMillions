@@ -117,20 +117,11 @@ class SlotsGold {
             <div class="sg-header">
                 <button id="sg-paytable-btn" class="sg-paytable-btn">📊 Pay Table</button>
                 <h1>🎰 Golden Slots</h1>
-                <div class="sg-stats">
-                    <div class="sg-gold">💰 <span id="sg-gold-amount">${
-                      this.sg_state.gold
-                    }</span></div>
-                    <div class="sg-level">⭐ Level <span id="sg-level">${
-                      this.sg_state.level
-                    }</span></div>
-                    <div class="sg-prestige">👑 Prestige <span id="sg-prestige">${
+                <div class="sg-prestige-info">
+                    👑 Prestige <span id="sg-prestige">${
                       this.sg_state.prestige
-                    }</span></div>
-                </div>
-                <div class="sg-bonuses">
-                    <div class="sg-level-bonus">Level Bonus: <strong>+<span id="sg-level-bonus">0</span>%</strong></div>
-                    <div class="sg-prestige-bonus">Prestige Bonus: <strong>+<span id="sg-prestige-bonus">0</span>%</strong></div>
+                    }</span>
+                    <span class="sg-prestige-bonus">+<span id="sg-prestige-bonus">0</span>% Bonus</span>
                 </div>
             </div>
 
@@ -144,46 +135,64 @@ class SlotsGold {
                     <div class="sg-reel" id="sg-reel-4">🎰</div>
                 </div>
                 
-                <div class="sg-exp-bar">
-                    <div class="sg-exp-fill" id="sg-exp-fill"></div>
-                    <span class="sg-exp-text" id="sg-exp-text">EXP: 0/1</span>
+                <div class="sg-progression">
+                    <div class="sg-level-info">
+                        <span class="sg-level-display">⭐ Lv.<span id="sg-level">${
+                          this.sg_state.level
+                        }</span></span>
+                        <span class="sg-level-bonus">+<span id="sg-level-bonus">0</span>% Bonus</span>
+                    </div>
+                    <div class="sg-exp-bar">
+                        <div class="sg-exp-fill" id="sg-exp-fill"></div>
+                        <span class="sg-exp-text" id="sg-exp-text">EXP: 0/1</span>
+                    </div>
                 </div>
             </div>
 
             <div class="sg-controls">
-                <div class="sg-bet-controls">
-                    <label>Bet Amount:</label>
-                    <select id="sg-bet-select">
-                        ${this.sg_config.betting.betLabels
-                          .map(
-                            (label, index) =>
-                              `<option value="${index}" ${
-                                index === this.sg_state.currentBet
-                                  ? "selected"
-                                  : ""
-                              }>${label}</option>`
-                          )
-                          .join("")}
-                    </select>
+                <div class="sg-betting-section">
+                    <div class="sg-money-display">
+                        <span class="sg-gold-label">💰 Balance:</span>
+                        <span class="sg-gold-amount" id="sg-gold-amount">${
+                          this.sg_state.gold
+                        }</span>
+                    </div>
+                    <div class="sg-bet-controls">
+                        <label>Bet:</label>
+                        <select id="sg-bet-select">
+                            ${this.sg_config.betting.betLabels
+                              .map(
+                                (label, index) =>
+                                  `<option value="${index}" ${
+                                    index === this.sg_state.currentBet
+                                      ? "selected"
+                                      : ""
+                                  }>${label}</option>`
+                              )
+                              .join("")}
+                        </select>
+                    </div>
                 </div>
                 
-                <button id="sg-spin-btn" class="sg-spin-btn">SPIN (${
-                  this.sg_config.betting.betLabels[this.sg_state.currentBet]
-                })</button>
-                <button id="sg-beg-btn" class="sg-beg-btn" style="display: none;">BEG</button>
-                
-                <button id="sg-prestige-btn" class="sg-prestige-btn">
-                    PRESTIGE ($${this.getPrestigeCost()})
-                </button>
+                <div class="sg-action-buttons">
+                    <button id="sg-spin-btn" class="sg-spin-btn">SPIN (${
+                      this.sg_config.betting.betLabels[this.sg_state.currentBet]
+                    })</button>
+                    <button id="sg-beg-btn" class="sg-beg-btn" style="display: none;">BEG</button>
+                    <button id="sg-prestige-btn" class="sg-prestige-btn">
+                        PRESTIGE (${this.getPrestigeCost()})
+                    </button>
+                </div>
             </div>
 
-            <div class="sg-drawers">
-                <button class="sg-drawer-toggle" data-drawer="achievements">🏆 Achievements</button>
-            </div>
-
-            <div id="sg-achievements-drawer" class="sg-drawer">
-                <h3>🏆 Achievements</h3>
-                <div id="sg-achievements-list"></div>
+            <button id="sg-achievements-toggle" class="sg-achievements-toggle">🏆</button>
+            
+            <div id="sg-achievements-sidebar" class="sg-achievements-sidebar">
+                <div class="sg-achievements-header">
+                    <h3>🏆 Achievements</h3>
+                    <button id="sg-achievements-close" class="sg-achievements-close">✕</button>
+                </div>
+                <div id="sg-achievements-list" class="sg-achievements-list"></div>
             </div>
 
             <div id="sg-beg-overlay" class="sg-overlay">
@@ -242,19 +251,20 @@ class SlotsGold {
       .querySelector("#sg-paytable-close")
       .addEventListener("click", () => this.hidePaytablePopup());
 
+    // Achievements sidebar
+    this.gameContainer
+      .querySelector("#sg-achievements-toggle")
+      .addEventListener("click", () => this.showAchievementsSidebar());
+    this.gameContainer
+      .querySelector("#sg-achievements-close")
+      .addEventListener("click", () => this.hideAchievementsSidebar());
+
     this.gameContainer
       .querySelector("#sg-bet-select")
       .addEventListener("change", (e) => {
         this.sg_state.currentBet = parseInt(e.target.value);
         this.updateSpinButton();
       });
-
-    this.gameContainer.querySelectorAll(".sg-drawer-toggle").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const drawer = e.target.dataset.drawer;
-        this.toggleDrawer(drawer);
-      });
-    });
 
     // Close popups when clicking overlay
     this.gameContainer
@@ -272,6 +282,38 @@ class SlotsGold {
           this.hidePaytablePopup();
         }
       });
+
+    // Close sidebar when clicking outside
+    document.addEventListener("click", (e) => {
+      const sidebar = this.gameContainer.querySelector(
+        "#sg-achievements-sidebar"
+      );
+      const toggle = this.gameContainer.querySelector(
+        "#sg-achievements-toggle"
+      );
+
+      if (
+        sidebar.classList.contains("sg-sidebar-open") &&
+        !sidebar.contains(e.target) &&
+        !toggle.contains(e.target)
+      ) {
+        this.hideAchievementsSidebar();
+      }
+    });
+  }
+
+  showAchievementsSidebar() {
+    const sidebar = this.gameContainer.querySelector(
+      "#sg-achievements-sidebar"
+    );
+    sidebar.classList.add("sg-sidebar-open");
+  }
+
+  hideAchievementsSidebar() {
+    const sidebar = this.gameContainer.querySelector(
+      "#sg-achievements-sidebar"
+    );
+    sidebar.classList.remove("sg-sidebar-open");
   }
 
   toggleDrawer(drawerName) {
@@ -644,12 +686,12 @@ class SlotsGold {
     this.sg_state.expNeeded = this.calculateExpNeeded(this.sg_state.level);
     const expPercent = (this.sg_state.exp / this.sg_state.expNeeded) * 100;
     expFill.style.width = `${expPercent}%`;
-    expText.textContent = `EXP: ${this.sg_state.exp}/${this.sg_state.expNeeded}`;
+    expText.textContent = `${this.sg_state.exp}/${this.sg_state.expNeeded}`;
 
     // Update prestige button
     const prestigeBtn = this.gameContainer.querySelector("#sg-prestige-btn");
     const prestigeCost = this.getPrestigeCost();
-    prestigeBtn.textContent = `PRESTIGE ($${prestigeCost})`;
+    prestigeBtn.textContent = `PRESTIGE (${prestigeCost})`;
     prestigeBtn.disabled = this.sg_state.gold < prestigeCost;
 
     this.updateSpinButton();
