@@ -1,81 +1,191 @@
-// Enhanced Slots game functionality - FIXED VERSION
+// Enhanced Slots game with own configuration and achievement system
 class SlotsGame {
   constructor(gameInstance) {
     this.game = gameInstance;
-    this.config = GameConfig.SLOTS;
-    this.spinning = false;
-    this.reels = ["?", "?", "?"];
-    this.reelElements = [];
-    this.spinHistory = [];
-    this.autoSpinActive = false;
-    this.autoSpinCount = 0;
+    this.gameState = null;
     this.screenElement = null;
+    this.spinning = false;
+    this.achievements = [];
+    this.achievementRewards = 0;
+    this.streakCounter = 0;
+    this.bestStreak = 0;
+    this.sessionStats = {
+      spinsPlayed: 0,
+      totalWon: 0,
+      totalLost: 0,
+      biggestWin: 0,
+      sessionStartTime: null,
+      symbolFrequency: {},
+      winsByType: { small: 0, medium: 0, big: 0, jackpot: 0 },
+      specialCombinations: 0,
+    };
+    this.reelElements = [];
+    this.currentSymbols = [null, null, null];
     this.init();
   }
 
   init() {
-    this.initializeAnimations();
+    // Check if SlotsConfig is available
+    if (typeof SlotsConfig === "undefined") {
+      console.error(
+        "SlotsConfig is not loaded! Make sure slots-config.js is loaded before slots.js"
+      );
+      return;
+    }
+
+    this.initializeAchievements();
+    this.sessionStats.sessionStartTime = Date.now();
   }
 
-  // HTML template for the slots screen
+  initializeAchievements() {
+    if (typeof SlotsConfig === "undefined") {
+      console.error("SlotsConfig is not available for achievements");
+      this.possibleAchievements = [];
+      return;
+    }
+    this.possibleAchievements = Object.values(SlotsConfig.ACHIEVEMENTS);
+  }
+
+  // Enhanced HTML template with better UI
   getHTMLTemplate() {
+    const currentBet =
+      this.game.gameSettings?.slotsBet ||
+      (typeof SlotsConfig !== "undefined" ? SlotsConfig.MIN_BET : 1);
+    const playerMoney = this.game.playerMoney || 0;
+
+    // Get random tip safely
+    const randomTip =
+      typeof SlotsConfig !== "undefined" && SlotsConfig.getRandomTip
+        ? SlotsConfig.getRandomTip()
+        : "💡 Spin the reels to win big prizes!";
+
     return `
       <div id="slots-screen" class="screen">
         <div class="container">
-          <button id="slots-back" class="back-button">← Back to Hub</button>
+          <button id="slots-back" class="back-button">← Cash Out & Exit</button>
+          
+          <!-- Enhanced Header -->
           <div class="game-header">
-            <h1>🎰 Slots</h1>
-            <p>Money: <span id="slots-money">${this.game.formatMoney(
-              this.game.playerMoney
-            )}</span> | Bet: $<span id="slots-current-bet">${
-      this.game.gameSettings.slotsBet
-    }</span></p>
+            <div class="game-info">
+              <h1>🎰 Lucky Slots</h1>
+              <p class="game-subtitle">Spin to Win Big!</p>
+            </div>
+            <div class="player-stats">
+              <p class="money-display">Money: <span id="slots-money">$${playerMoney.toFixed(
+                2
+              )}</span></p>
+              <p class="bet-display">Bet: $<span id="slots-current-bet">${currentBet}</span></p>
+              <p class="session-display">
+                Spins: <span id="spins-count">0</span> | 
+                Streak: <span id="win-streak">0</span> | 
+                Biggest: $<span id="biggest-win">0</span>
+              </p>
+              <p class="rewards-display">🏆 Rewards: $<span id="achievement-rewards">0</span></p>
+            </div>
           </div>
-          
+
           <div class="slots-machine">
-            <div class="slots-reels">
-              <div class="reel">?</div>
-              <div class="reel">?</div>
-              <div class="reel">?</div>
+            <!-- Slot Machine Display -->
+            <div class="machine-body">
+              <div class="machine-top">
+                <div class="neon-sign">🎰 JACKPOT 🎰</div>
+                <div class="payout-display">
+                  <div class="potential-win">Next Win: <span id="potential-payout">$${
+                    currentBet * 2
+                  }</span></div>
+                </div>
+              </div>
+
+              <!-- Reels Section -->
+              <div class="reels-container">
+                <div class="reel-frame">
+                  <div id="reel-1" class="reel">
+                    <div class="symbol-container">
+                      <div class="symbol">🍒</div>
+                    </div>
+                  </div>
+                  <div id="reel-2" class="reel">
+                    <div class="symbol-container">
+                      <div class="symbol">🍒</div>
+                    </div>
+                  </div>
+                  <div id="reel-3" class="reel">
+                    <div class="symbol-container">
+                      <div class="symbol">🍒</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Win Line Indicator -->
+                <div id="win-line" class="win-line"></div>
+              </div>
+
+              <!-- Control Panel -->
+              <div class="control-panel">
+                <button id="spin-button" class="spin-button glow-button">
+                  <span class="button-icon">🎲</span>
+                  <span class="button-text">SPIN</span>
+                  <span class="button-cost">($<span id="spin-cost">${currentBet}</span>)</span>
+                </button>
+                
+                <div class="game-info-panel">
+                  <div id="last-win" class="last-win">Last Win: $0</div>
+                  <div id="game-status" class="game-status">Ready to Spin!</div>
+                </div>
+              </div>
             </div>
-            <button id="spin-button" class="spin-button">SPIN ($<span id="spin-cost">${
-              this.game.gameSettings.slotsBet
-            }</span>)</button>
-            
-            <div class="auto-spin-controls">
-              <h4>Auto Spin</h4>
-              <button class="auto-spin-button" data-spins="5">5x</button>
-              <button class="auto-spin-button" data-spins="10">10x</button>
-              <button class="auto-spin-button" data-spins="25">25x</button>
-              <button class="auto-spin-button" data-spins="50">50x</button>
+
+            <!-- Side Panels -->
+            <div class="side-panels">
+              <!-- Paytable -->
+              <div class="paytable-panel">
+                <h4>💰 Paytable</h4>
+                <div class="paytable-content">
+                  <div class="payout-row">
+                    <span class="symbols">💎💎💎</span>
+                    <span class="multiplier">500x</span>
+                  </div>
+                  <div class="payout-row">
+                    <span class="symbols">7️⃣7️⃣7️⃣</span>
+                    <span class="multiplier">100x</span>
+                  </div>
+                  <div class="payout-row">
+                    <span class="symbols">💰💰💰</span>
+                    <span class="multiplier">35x</span>
+                  </div>
+                  <div class="payout-row">
+                    <span class="symbols">🔔🔔🔔</span>
+                    <span class="multiplier">20x</span>
+                  </div>
+                  <div class="payout-row">
+                    <span class="symbols">🍇🍇🍇</span>
+                    <span class="multiplier">15x</span>
+                  </div>
+                  <div class="payout-row special">
+                    <span class="symbols">🍒🍋🍊</span>
+                    <span class="multiplier">8x</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Achievements Panel -->
+              <div class="achievements-panel">
+                <h4>🏆 Achievements</h4>
+                <div class="achievement-summary">
+                  <p>Session: <span id="achievement-count">0</span> unlocked</p>
+                  <p class="reward-preview">Cash Out: $<span id="cashout-preview">0</span></p>
+                </div>
+                <div id="achievements-list" class="achievements-list">
+                  <div class="no-achievements">Spin to unlock achievements!</div>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div class="spin-history" id="spin-history-container">
-            <h4>📊 Recent Spins</h4>
-            <div id="spin-history"></div>
-          </div>
-          
-          <div class="payouts-info">
-            <h3>💰 Payouts 💰</h3>
-            <div class="payout-tier mega">
-              <p>7️⃣ 7️⃣ 7️⃣ Lucky Sevens: <span class="multiplier">100x</span></p>
-              <p>💎 💎 💎 Diamond Jackpot: <span class="multiplier">50x</span></p>
-              <p>💰 💰 💰 Money Bags: <span class="multiplier">25x</span></p>
-            </div>
-            <div class="payout-tier high">
-              <p>⭐ ⭐ ⭐ Triple Stars: <span class="multiplier">15x</span></p>
-              <p>🍊 🍊 🍊 Orange Burst: <span class="multiplier">8x</span></p>
-              <p>Mixed Jackpot Symbols: <span class="multiplier">12x</span></p>
-            </div>
-            <div class="payout-tier pairs">
-              <p>💎 💎 Diamond Pair: <span class="multiplier">5x</span></p>
-              <p>7️⃣7️⃣ Lucky Pair: <span class="multiplier">4x</span></p>
-              <p>Any Pair: <span class="multiplier">1.5x</span></p>
-            </div>
-            <div class="payout-tier bonus">
-              <p>💎 Diamond Bonus: <span class="multiplier">0.5x</span></p>
-              <p>7️⃣ Lucky Seven: <span class="multiplier">0.25x</span></p>
+
+          <!-- Tips Panel -->
+          <div class="tips-panel">
+            <div id="current-tip" class="tip-display">
+              ${randomTip}
             </div>
           </div>
         </div>
@@ -83,905 +193,668 @@ class SlotsGame {
     `;
   }
 
-  // Create and inject the HTML
   createScreen() {
     const gameContainer = document.getElementById("game-container");
     if (gameContainer) {
       gameContainer.innerHTML = this.getHTMLTemplate();
       this.screenElement = document.getElementById("slots-screen");
+      this.reelElements = [
+        document.getElementById("reel-1"),
+        document.getElementById("reel-2"),
+        document.getElementById("reel-3"),
+      ];
       this.bindEvents();
-      this.updateDisplay();
+      this.resetAchievements();
+      this.updateTips();
     }
   }
 
-  // Remove the screen
   destroyScreen() {
-    this.clearPreviousAnimations();
-    this.stopAutoSpin();
     if (this.screenElement) {
       this.screenElement.remove();
       this.screenElement = null;
     }
+    this.gameState = null;
   }
 
-  // Show the screen
   show() {
     this.createScreen();
     if (this.screenElement) {
       this.screenElement.classList.add("active");
       this.onShow();
+      AnimationUtils.slideIn(this.screenElement, "right", 500);
     }
   }
 
-  // Hide the screen
   hide() {
     if (this.screenElement) {
+      this.cashOutAchievements();
       this.screenElement.classList.remove("active");
-      // Small delay before destroying to allow transition
       setTimeout(() => {
         this.destroyScreen();
       }, 100);
     }
   }
 
-  initializeAnimations() {
-    // Initialize CSS animations if not already done
-    if (window.AnimationUtils) {
-      window.AnimationUtils.initializeCSS();
+  // Achievement system methods
+  resetAchievements() {
+    this.achievements = [];
+    this.achievementRewards = 0;
+    this.streakCounter = 0;
+    this.sessionStats = {
+      spinsPlayed: 0,
+      totalWon: 0,
+      totalLost: 0,
+      biggestWin: 0,
+      sessionStartTime: Date.now(),
+      symbolFrequency: {},
+      winsByType: { small: 0, medium: 0, big: 0, jackpot: 0 },
+      specialCombinations: 0,
+    };
+    this.updateAchievementDisplay();
+    this.updateStatsDisplay(); // Changed from updateSessionStats() to updateStatsDisplay()
+  }
+
+  cashOutAchievements() {
+    if (this.achievementRewards > 0) {
+      this.game.winMoney(this.achievementRewards);
+      this.game.showMessage(
+        `🏆 Slots Achievement Bonus: +$${this.achievementRewards}! Total achievements: ${this.achievements.length}`,
+        GameConfig.UI.LONG_MESSAGE_DURATION
+      );
+
+      const container = document.querySelector(".slots-machine");
+      if (container) {
+        AnimationUtils.createConfetti(container, 25);
+      }
     }
   }
 
   bindEvents() {
     const spinButton = document.getElementById("spin-button");
-    if (spinButton) {
-      spinButton.addEventListener("click", () => this.spin());
-    }
+    const backButton = document.getElementById("slots-back");
 
-    // Add auto-spin controls
-    const autoSpinContainer = document.querySelector(".auto-spin-controls");
-    if (autoSpinContainer) {
-      autoSpinContainer.addEventListener("click", (e) => {
-        if (e.target.classList.contains("auto-spin-button")) {
-          const count = parseInt(e.target.dataset.spins);
-          this.startAutoSpin(count);
+    if (spinButton) {
+      spinButton.addEventListener("click", (e) => {
+        if (!this.spinning) {
+          AnimationUtils.rippleEffect(spinButton, e);
+          this.spin();
         }
       });
     }
 
-    // Add keyboard support
-    document.addEventListener("keydown", (e) => {
-      if (this.game.currentScreen === "slots") {
-        if (e.code === "Space" || e.code === "Enter") {
-          e.preventDefault();
-          this.spin();
-        }
-      }
-    });
+    if (backButton) {
+      backButton.addEventListener("click", () => {
+        this.showExitConfirmation();
+      });
+    }
+
+    // Update tips periodically
+    setInterval(() => {
+      this.updateTips();
+    }, 8000);
+  }
+
+  showExitConfirmation() {
+    const rewardText =
+      this.achievementRewards > 0
+        ? `You'll receive $${this.achievementRewards} in achievement bonuses!`
+        : "No achievement bonuses this session.";
+
+    const sessionTime = Math.floor(
+      (Date.now() - this.sessionStats.sessionStartTime) / 1000 / 60
+    );
+    const confirmMessage = `Ready to cash out?\n\nSession: ${sessionTime} minutes\nSpins: ${this.sessionStats.spinsPlayed}\n${rewardText}\n\nLeave the slots?`;
+
+    if (confirm(confirmMessage)) {
+      this.game.showScreen("hub");
+    }
   }
 
   spin() {
-    if (this.spinning) return;
-
-    const bet = this.game.gameSettings.slotsBet;
+    const bet = this.game.gameSettings?.slotsBet || SlotsConfig.MIN_BET;
 
     if (!this.game.canAfford(bet)) {
-      this.game.showMessage("Not enough money!", 2000);
-      this.stopAutoSpin();
+      this.game.showMessage(
+        "Not enough money! Try a smaller bet or search for trash!",
+        GameConfig.UI.LONG_MESSAGE_DURATION
+      );
       return;
     }
 
     this.spinning = true;
-    this.updateSpinButton();
-    this.clearPreviousAnimations();
+    this.sessionStats.spinsPlayed++;
 
-    // Enhanced spinning animation with staggered timing
-    this.startEnhancedSpinAnimation();
+    // Unlock first spin achievement
+    if (this.sessionStats.spinsPlayed === 1) {
+      this.unlockAchievement("slots_first_spin");
+    }
 
-    // Generate results with realistic timing
-    setTimeout(() => {
-      this.generateResult(bet);
-    }, 2500);
+    // Disable spin button
+    const spinButton = document.getElementById("spin-button");
+    if (spinButton) {
+      spinButton.disabled = true;
+      spinButton.classList.add("spinning");
+    }
+
+    // Update status
+    this.updateGameStatus("Spinning...");
+
+    // Play spin sound
+    this.playSound("SPIN_START");
+
+    // Start reel animations
+    this.startReelAnimations();
+
+    // Generate results
+    const results = this.generateSpinResults();
+
+    // Stop reels with results
+    this.stopReelsWithResults(results, bet);
   }
 
-  startEnhancedSpinAnimation() {
-    this.reelElements = document.querySelectorAll(".reel");
+  generateSpinResults() {
+    // Safety check for SlotsConfig
+    if (typeof SlotsConfig === "undefined" || !SlotsConfig.getRandomSymbol) {
+      console.error("SlotsConfig not available, using fallback symbols");
+      const fallbackSymbols = [
+        {
+          key: "CHERRY",
+          symbol: "🍒",
+          name: "Cherry",
+          value: 1,
+          color: "#dc3545",
+        },
+        {
+          key: "LEMON",
+          symbol: "🍋",
+          name: "Lemon",
+          value: 2,
+          color: "#ffc107",
+        },
+        { key: "BELL", symbol: "🔔", name: "Bell", value: 5, color: "#ffd700" },
+      ];
+      return [
+        fallbackSymbols[Math.floor(Math.random() * fallbackSymbols.length)],
+        fallbackSymbols[Math.floor(Math.random() * fallbackSymbols.length)],
+        fallbackSymbols[Math.floor(Math.random() * fallbackSymbols.length)],
+      ];
+    }
 
-    // Add spinning effects to each reel with different timings
+    return [
+      SlotsConfig.getRandomSymbol(),
+      SlotsConfig.getRandomSymbol(),
+      SlotsConfig.getRandomSymbol(),
+    ];
+  }
+
+  startReelAnimations() {
     this.reelElements.forEach((reel, index) => {
-      reel.classList.add("spinning");
+      if (reel) {
+        reel.classList.add("spinning");
 
-      // Add blur effect during spin
-      reel.style.filter = "blur(2px)";
-      reel.style.transform = "scale(0.95)";
-
-      // Rapid symbol changes with acceleration/deceleration
-      let spinSpeed = 50; // Start fast
-      const maxSpeed = 200; // Slow down to this
-      let currentSpeed = spinSpeed;
-
-      const spinInterval = setInterval(() => {
-        if (this.spinning) {
-          reel.textContent = this.getRandomSymbol();
-
-          // Gradually slow down the spin
-          if (currentSpeed < maxSpeed) {
-            currentSpeed += 2;
-          }
-        } else {
-          clearInterval(spinInterval);
+        // Animate symbols changing rapidly
+        const symbolContainer = reel.querySelector(".symbol-container");
+        if (symbolContainer) {
+          this.animateReelSymbols(symbolContainer);
         }
-      }, currentSpeed);
+      }
+    });
+  }
 
-      // Stop each reel at different times for realistic cascade effect
-      const stopDelay = 1800 + index * 300;
+  animateReelSymbols(container) {
+    // Safety check for SlotsConfig
+    if (typeof SlotsConfig === "undefined" || !SlotsConfig.SYMBOLS) {
+      console.error("SlotsConfig.SYMBOLS not available");
+      return;
+    }
+
+    const symbols = Object.values(SlotsConfig.SYMBOLS);
+    let animationCount = 0;
+    const maxAnimations = 20;
+
+    const symbolAnimation = setInterval(() => {
+      const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+      const symbolElement = container.querySelector(".symbol");
+      if (symbolElement) {
+        symbolElement.textContent = randomSymbol.symbol;
+        symbolElement.style.color = randomSymbol.color;
+      }
+
+      animationCount++;
+      if (animationCount >= maxAnimations) {
+        clearInterval(symbolAnimation);
+      }
+    }, SlotsConfig.ANIMATION?.SYMBOL_SPIN_SPEED || 100);
+  }
+
+  stopReelsWithResults(results, bet) {
+    // Safety check
+    if (!results || results.length !== 3) {
+      console.error("Invalid results for stopping reels:", results);
+      this.spinning = false;
+      return;
+    }
+
+    // Stop reels one by one with delay
+    results.forEach((result, index) => {
       setTimeout(() => {
-        if (reel) {
-          reel.classList.remove("spinning");
-          reel.style.filter = "";
-          reel.style.transform = "";
+        this.stopReel(index, result);
+        this.playSound("REEL_STOP");
 
-          // Add landing animation
-          reel.style.animation = "reelLand 0.3s ease-out";
+        // If this is the last reel, process the results
+        if (index === results.length - 1) {
           setTimeout(() => {
-            if (reel) {
-              reel.style.animation = "";
-            }
+            this.processSpinResults(results, bet);
           }, 300);
         }
-      }, stopDelay);
+      }, index * (typeof SlotsConfig !== "undefined" ? SlotsConfig.ANIMATION?.REEL_DELAY || 200 : 200));
     });
   }
 
-  getRandomSymbol() {
-    // Use weighted random selection for more realistic feel
-    const symbols = this.config.SYMBOLS;
-    const weights = this.config.WEIGHTS;
+  stopReel(reelIndex, symbol) {
+    const reel = this.reelElements[reelIndex];
+    if (reel) {
+      reel.classList.remove("spinning");
 
-    const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
-    let random = Math.random() * totalWeight;
+      const symbolContainer = reel.querySelector(".symbol-container");
+      const symbolElement = symbolContainer?.querySelector(".symbol");
 
-    for (let i = 0; i < symbols.length; i++) {
-      random -= weights[i];
-      if (random <= 0) {
-        return symbols[i];
-      }
-    }
+      if (symbolElement) {
+        symbolElement.textContent = symbol.symbol;
+        symbolElement.style.color = symbol.color;
 
-    return symbols[0]; // Fallback
-  }
-
-  generateResult(bet) {
-    // Generate final reel results using weighted probability
-    this.reels = [
-      this.getRandomSymbol(),
-      this.getRandomSymbol(),
-      this.getRandomSymbol(),
-    ];
-
-    // Update display with dramatic reveal
-    this.revealResults();
-
-    // Calculate winnings with enhanced logic
-    const result = this.calculateEnhancedWin(bet);
-
-    // Add to history
-    this.spinHistory.push({
-      reels: [...this.reels],
-      result: result,
-      bet: bet,
-      timestamp: Date.now(),
-    });
-
-    // Process the result with enhanced effects
-    this.processEnhancedResult(result, bet);
-
-    this.spinning = false;
-
-    // Continue auto-spin if active
-    if (this.autoSpinActive && this.autoSpinCount > 0) {
-      this.autoSpinCount--;
-      if (this.autoSpinCount > 0 && this.game.canAfford(bet)) {
-        setTimeout(
-          () => {
-            if (this.autoSpinActive) {
-              this.spin();
-            }
-          },
-          result.tier === "mega" ? 4000 : result.tier === "high" ? 3000 : 2000
-        );
-      } else {
-        this.stopAutoSpin();
-      }
-    }
-
-    this.updateSpinButton();
-  }
-
-  revealResults() {
-    this.reelElements.forEach((reel, index) => {
-      setTimeout(() => {
-        if (reel) {
-          reel.textContent = this.reels[index];
-
-          // Add symbol-specific effects
-          this.addSymbolEffects(reel, this.reels[index]);
-
-          // Animate the reveal
-          reel.style.animation = "symbolReveal 0.5s ease-out";
-          setTimeout(() => {
-            if (reel) {
-              reel.style.animation = "";
-            }
-          }, 500);
-        }
-      }, index * 200);
-    });
-  }
-
-  addSymbolEffects(reel, symbol) {
-    // Remove previous symbol classes
-    reel.className = reel.className.replace(/symbol-\w+/g, "");
-
-    // Add symbol-specific styling
-    const symbolClasses = {
-      "💎": "symbol-diamond",
-      "7️⃣": "symbol-seven",
-      "💰": "symbol-money",
-      "🎰": "symbol-slot",
-      "⭐": "symbol-star",
-    };
-
-    if (symbolClasses[symbol]) {
-      reel.classList.add(symbolClasses[symbol]);
-    }
-  }
-
-  calculateEnhancedWin(bet) {
-    const [reel1, reel2, reel3] = this.reels;
-    const payouts = this.config.PAYOUTS;
-
-    // Check for exact three-of-a-kind matches
-    const threeOfAKindKey = `${reel1}${reel2}${reel3}`;
-    if (payouts[threeOfAKindKey]) {
-      return {
-        type: "exact_match",
-        key: threeOfAKindKey,
-        ...payouts[threeOfAKindKey],
-        winAmount: bet * payouts[threeOfAKindKey].multiplier,
-        bet: bet,
-      };
-    }
-
-    // Check for mixed jackpot symbols
-    const jackpotSymbols = this.config.JACKPOT_SYMBOLS;
-    const jackpotCount = this.reels.filter((symbol) =>
-      jackpotSymbols.includes(symbol)
-    ).length;
-
-    if (
-      jackpotCount === 3 &&
-      reel1 !== reel2 &&
-      reel2 !== reel3 &&
-      reel1 !== reel3
-    ) {
-      return {
-        type: "jackpot_mix",
-        key: "JACKPOT_MIX",
-        ...payouts.JACKPOT_MIX,
-        winAmount: bet * payouts.JACKPOT_MIX.multiplier,
-        bet: bet,
-      };
-    }
-
-    // Check for premium pairs
-    const pairChecks = [
-      {
-        pattern: "💎💎_",
-        check: () =>
-          (reel1 === "💎" && reel2 === "💎") ||
-          (reel2 === "💎" && reel3 === "💎") ||
-          (reel1 === "💎" && reel3 === "💎"),
-      },
-      {
-        pattern: "7️⃣7️⃣_",
-        check: () =>
-          (reel1 === "7️⃣" && reel2 === "7️⃣") ||
-          (reel2 === "7️⃣" && reel3 === "7️⃣") ||
-          (reel1 === "7️⃣" && reel3 === "7️⃣"),
-      },
-      {
-        pattern: "💰💰_",
-        check: () =>
-          (reel1 === "💰" && reel2 === "💰") ||
-          (reel2 === "💰" && reel3 === "💰") ||
-          (reel1 === "💰" && reel3 === "💰"),
-      },
-      {
-        pattern: "🎰🎰_",
-        check: () =>
-          (reel1 === "🎰" && reel2 === "🎰") ||
-          (reel2 === "🎰" && reel3 === "🎰") ||
-          (reel1 === "🎰" && reel3 === "🎰"),
-      },
-      {
-        pattern: "⭐⭐_",
-        check: () =>
-          (reel1 === "⭐" && reel2 === "⭐") ||
-          (reel2 === "⭐" && reel3 === "⭐") ||
-          (reel1 === "⭐" && reel3 === "⭐"),
-      },
-    ];
-
-    for (const pairCheck of pairChecks) {
-      if (pairCheck.check()) {
-        return {
-          type: "premium_pair",
-          key: pairCheck.pattern,
-          ...payouts[pairCheck.pattern],
-          winAmount: bet * payouts[pairCheck.pattern].multiplier,
-          bet: bet,
-        };
-      }
-    }
-
-    // Check for regular two of a kind
-    if (reel1 === reel2 || reel2 === reel3 || reel1 === reel3) {
-      return {
-        type: "two_of_a_kind",
-        key: "TWO_OF_A_KIND",
-        ...payouts.TWO_OF_A_KIND,
-        winAmount: bet * payouts.TWO_OF_A_KIND.multiplier,
-        bet: bet,
-      };
-    }
-
-    // Check for single symbol bonuses
-    if (this.reels.includes("💎")) {
-      return {
-        type: "single_bonus",
-        key: "SINGLE_DIAMOND",
-        ...payouts.SINGLE_DIAMOND,
-        winAmount: bet * payouts.SINGLE_DIAMOND.multiplier,
-        bet: bet,
-      };
-    }
-
-    if (this.reels.includes("7️⃣")) {
-      return {
-        type: "single_bonus",
-        key: "SINGLE_SEVEN",
-        ...payouts.SINGLE_SEVEN,
-        winAmount: bet * payouts.SINGLE_SEVEN.multiplier,
-        bet: bet,
-      };
-    }
-
-    // No match
-    return {
-      type: "no_match",
-      key: "NO_MATCH",
-      name: "No match",
-      multiplier: 0,
-      tier: "none",
-      winAmount: 0,
-      bet: bet,
-    };
-  }
-
-  processEnhancedResult(result, bet) {
-    // Deduct bet first
-    this.game.spendMoney(bet);
-
-    // Add winnings and show appropriate animations
-    if (result.winAmount > 0) {
-      this.game.winMoney(result.winAmount);
-      this.showEnhancedWinAnimation(result);
-    } else {
-      this.showEnhancedLoseAnimation();
-    }
-
-    // Show contextual message
-    const message =
-      result.winAmount > 0
-        ? `${result.name} - Won ${this.game.formatMoney(result.winAmount)}!`
-        : "No match this time - Try again!";
-
-    const messageDuration =
-      result.tier === "mega" ? 4000 : result.tier === "high" ? 3000 : 2000;
-    this.game.showMessage(message, messageDuration);
-
-    // Update advanced displays
-    this.updatePayoutDisplay(result);
-    this.updateSpinHistory();
-  }
-
-  showEnhancedWinAnimation(result) {
-    const slotsContainer = document.querySelector(".slots-machine");
-    if (!slotsContainer) return;
-
-    // Remove any existing animation classes
-    slotsContainer.classList.remove(
-      "big-win",
-      "mega-win",
-      "small-win",
-      "bonus-win"
-    );
-
-    switch (result.tier) {
-      case "mega":
-        slotsContainer.classList.add("mega-win");
-        this.showMegaJackpotEffects(result);
-        break;
-      case "high":
-        slotsContainer.classList.add("big-win");
-        this.showBigWinEffects(result);
-        break;
-      case "medium":
-        slotsContainer.classList.add("small-win");
-        this.showMediumWinEffects(result);
-        break;
-      case "low":
-        slotsContainer.classList.add("small-win");
-        this.showSmallWinEffects(result);
-        break;
-      case "bonus":
-        slotsContainer.classList.add("bonus-win");
-        this.showBonusEffects(result);
-        break;
-    }
-
-    // Highlight winning symbols
-    this.highlightWinningSymbols(result);
-
-    // Remove animation classes after animation
-    setTimeout(
-      () => {
-        if (slotsContainer) {
-          slotsContainer.classList.remove(
-            "mega-win",
-            "big-win",
-            "small-win",
-            "bonus-win"
-          );
-        }
-      },
-      result.tier === "mega" ? 4000 : 3000
-    );
-  }
-
-  showMegaJackpotEffects(result) {
-    // Massive confetti explosion
-    if (window.AnimationUtils) {
-      window.AnimationUtils.createConfetti(document.body, 100);
-    }
-
-    // Screen flash effect
-    this.createScreenFlash("#ffd700");
-
-    // Floating jackpot text
-    this.createFloatingJackpotText(result.name);
-
-    // Fireworks
-    this.showFireworks(8);
-  }
-
-  showBigWinEffects(result) {
-    if (window.AnimationUtils) {
-      const slotsContainer = document.querySelector(".slots-machine");
-      if (slotsContainer) {
-        window.AnimationUtils.createConfetti(slotsContainer, 50);
-      }
-    }
-    this.showFireworks(4);
-    this.createFloatingText("BIG WIN!", "#28a745");
-  }
-
-  showMediumWinEffects(result) {
-    if (window.AnimationUtils) {
-      const slotsContainer = document.querySelector(".slots-machine");
-      if (slotsContainer) {
-        window.AnimationUtils.createConfetti(slotsContainer, 25);
-      }
-    }
-    this.createFloatingText("NICE WIN!", "#ffc107");
-  }
-
-  showSmallWinEffects(result) {
-    // Subtle sparkle effect
-    const reelsContainer = document.querySelector(".slots-reels");
-    if (reelsContainer) {
-      this.createSparkles(reelsContainer, 10);
-    }
-    this.createFloatingText("WIN!", "#17a2b8");
-  }
-
-  showBonusEffects(result) {
-    // Gentle pulse effect
-    const reels = document.querySelector(".slots-reels");
-    if (reels) {
-      reels.style.animation = "bonusPulse 1s ease-in-out";
-      setTimeout(() => {
-        if (reels) {
-          reels.style.animation = "";
-        }
-      }, 1000);
-    }
-  }
-
-  showEnhancedLoseAnimation() {
-    const slotsContainer = document.querySelector(".slots-machine");
-    if (slotsContainer) {
-      slotsContainer.classList.add("lose-spin");
-
-      // Subtle shake effect
-      if (window.AnimationUtils) {
-        window.AnimationUtils.shakeElement(slotsContainer, 300);
-      }
-
-      setTimeout(() => {
-        if (slotsContainer) {
-          slotsContainer.classList.remove("lose-spin");
-        }
-      }, 1000);
-    }
-  }
-
-  highlightWinningSymbols(result) {
-    if (result.winAmount <= 0) return;
-
-    this.reelElements.forEach((reel, index) => {
-      if (!reel) return;
-
-      const symbol = this.reels[index];
-
-      // Determine if this symbol contributed to the win
-      let isWinning = false;
-
-      if (result.type === "exact_match") {
-        isWinning = true;
-      } else if (
-        result.type === "jackpot_mix" &&
-        this.config.JACKPOT_SYMBOLS.includes(symbol)
-      ) {
-        isWinning = true;
-      } else if (
-        result.type === "premium_pair" ||
-        result.type === "two_of_a_kind"
-      ) {
-        // Check if this symbol is part of the pair
-        isWinning = this.reels.filter((s) => s === symbol).length >= 2;
-      } else if (result.type === "single_bonus") {
-        isWinning =
-          (result.key === "SINGLE_DIAMOND" && symbol === "💎") ||
-          (result.key === "SINGLE_SEVEN" && symbol === "7️⃣");
-      }
-
-      if (isWinning) {
-        reel.classList.add("winning-symbol");
-
-        // Add tier-specific glow
-        const glowClass = `glow-${result.tier}`;
-        reel.classList.add(glowClass);
-
+        // Add stop animation
+        symbolElement.classList.add("symbol-stop");
         setTimeout(() => {
-          if (reel) {
-            reel.classList.remove("winning-symbol", glowClass);
-          }
-        }, 3000);
-      }
-    });
-  }
-
-  createScreenFlash(color) {
-    const flash = document.createElement("div");
-    flash.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: ${color};
-      opacity: 0.7;
-      z-index: 9999;
-      pointer-events: none;
-      animation: screenFlash 0.5s ease-out;
-    `;
-
-    document.body.appendChild(flash);
-
-    setTimeout(() => {
-      if (flash.parentNode) {
-        flash.parentNode.removeChild(flash);
-      }
-    }, 500);
-  }
-
-  createFloatingJackpotText(text) {
-    const jackpotText = document.createElement("div");
-    jackpotText.textContent = text;
-    jackpotText.style.cssText = `
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 3rem;
-      font-weight: bold;
-      color: #ffd700;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-      z-index: 9998;
-      pointer-events: none;
-      animation: jackpotText 3s ease-out forwards;
-    `;
-
-    document.body.appendChild(jackpotText);
-
-    setTimeout(() => {
-      if (jackpotText.parentNode) {
-        jackpotText.parentNode.removeChild(jackpotText);
-      }
-    }, 3000);
-  }
-
-  createFloatingText(text, color) {
-    if (window.AnimationUtils) {
-      const reelsContainer = document.querySelector(".slots-reels");
-      if (reelsContainer) {
-        const rect = reelsContainer.getBoundingClientRect();
-        window.AnimationUtils.floatingText(
-          text,
-          rect.left + rect.width / 2,
-          rect.top + rect.height / 2,
-          color,
-          2000
-        );
+          symbolElement.classList.remove("symbol-stop");
+        }, 300);
       }
     }
+
+    this.currentSymbols[reelIndex] = symbol;
   }
 
-  createSparkles(container, count) {
-    if (!container) return;
-
-    for (let i = 0; i < count; i++) {
-      const sparkle = document.createElement("div");
-      sparkle.innerHTML = "✨";
-      sparkle.style.cssText = `
-        position: absolute;
-        left: ${Math.random() * 100}%;
-        top: ${Math.random() * 100}%;
-        font-size: 1rem;
-        pointer-events: none;
-        animation: sparkle 1s ease-out forwards;
-      `;
-
-      container.style.position = "relative";
-      container.appendChild(sparkle);
-
-      setTimeout(() => {
-        if (sparkle.parentNode) {
-          sparkle.parentNode.removeChild(sparkle);
-        }
-      }, 1000);
-    }
-  }
-
-  showFireworks(count = 4) {
-    const container = document.querySelector(".slots-machine");
-    if (!container) return;
-
-    for (let i = 0; i < count; i++) {
-      setTimeout(() => {
-        this.createSingleFirework(container);
-      }, i * 300);
-    }
-  }
-
-  createSingleFirework(container) {
-    if (!container) return;
-
-    const firework = document.createElement("div");
-    firework.className = "firework-burst";
-    firework.style.cssText = `
-      position: absolute;
-      left: ${20 + Math.random() * 60}%;
-      top: ${20 + Math.random() * 60}%;
-      width: 4px;
-      height: 4px;
-    `;
-
-    // Create particles
-    const colors = [
-      "#ff6b6b",
-      "#4ecdc4",
-      "#45b7d1",
-      "#96ceb4",
-      "#ffeaa7",
-      "#dda0dd",
-      "#ff9ff3",
-      "#54a0ff",
-    ];
-    for (let i = 0; i < 12; i++) {
-      const particle = document.createElement("div");
-      particle.style.cssText = `
-        position: absolute;
-        width: 6px;
-        height: 6px;
-        background: ${colors[Math.floor(Math.random() * colors.length)]};
-        border-radius: 50%;
-        animation: fireworkParticle 1.5s ease-out forwards;
-        transform: rotate(${i * 30}deg);
-      `;
-      firework.appendChild(particle);
+  processSpinResults(results, bet) {
+    // Safety check for SlotsConfig
+    if (typeof SlotsConfig === "undefined") {
+      console.error("SlotsConfig not available for processing results");
+      this.spinning = false;
+      return;
     }
 
-    container.style.position = "relative";
-    container.appendChild(firework);
+    const payout = SlotsConfig.calculatePayout(results, bet);
+    const winType = SlotsConfig.getWinType(results, payout, bet);
+    const isWin = payout > 0;
 
-    setTimeout(() => {
-      if (firework.parentNode) {
-        firework.parentNode.removeChild(firework);
-      }
-    }, 1500);
-  }
+    // Update statistics
+    this.updateSessionStats(bet, payout, winType, results);
 
-  clearPreviousAnimations() {
-    // Remove any existing animation classes
-    document
-      .querySelectorAll(
-        ".winning-symbol, .glow-mega, .glow-high, .glow-medium, .glow-low, .glow-bonus"
-      )
-      .forEach((el) => {
-        el.classList.remove(
-          "winning-symbol",
-          "glow-mega",
-          "glow-high",
-          "glow-medium",
-          "glow-low",
-          "glow-bonus"
-        );
-      });
+    // Process money
+    this.game.spendMoney(bet);
+    if (isWin) {
+      this.game.winMoney(payout);
+      this.streakCounter++;
+      this.sessionStats.totalWon += payout;
+    } else {
+      this.streakCounter = 0;
+      this.sessionStats.totalLost += bet;
+    }
 
-    // Clear any floating elements
-    document.querySelectorAll(".firework-burst, .sparkle").forEach((el) => {
-      if (el.parentNode) {
-        el.parentNode.removeChild(el);
-      }
-    });
-  }
+    // Check for achievements
+    this.checkAchievements(results, payout, bet, winType, isWin);
 
-  updateDisplay() {
-    const reelElements = document.querySelectorAll(".reel");
-    reelElements.forEach((reel, index) => {
-      if (reel) {
-        reel.textContent = this.reels[index];
-      }
-    });
-  }
+    // Show results
+    this.showSpinResults(results, payout, bet, winType, isWin);
 
-  updateSpinButton() {
+    // Re-enable spinning
+    this.spinning = false;
     const spinButton = document.getElementById("spin-button");
-    if (!spinButton) return;
+    if (spinButton) {
+      spinButton.disabled = false;
+      spinButton.classList.remove("spinning");
+    }
 
-    const bet = this.game.gameSettings.slotsBet;
+    // Update displays
+    this.updateAllDisplays();
+  }
 
-    if (this.spinning) {
-      spinButton.textContent = "SPINNING...";
-      spinButton.disabled = true;
-      spinButton.classList.add("spinning-state");
-    } else {
-      spinButton.classList.remove("spinning-state");
-      const canAfford = this.game.canAfford(bet);
-      spinButton.disabled = !canAfford;
+  updateSessionStats(bet = 0, payout = 0, winType = "none", results = []) {
+    // Only track symbol frequency if results are provided
+    if (results && results.length > 0) {
+      results.forEach((symbol) => {
+        this.sessionStats.symbolFrequency[symbol.key] =
+          (this.sessionStats.symbolFrequency[symbol.key] || 0) + 1;
+      });
+    }
 
-      if (this.autoSpinActive) {
-        spinButton.textContent = `AUTO (${this.autoSpinCount} left)`;
-      } else if (canAfford) {
-        spinButton.textContent = `SPIN ($${bet})`;
-      } else {
-        spinButton.textContent = `SPIN (Need $${bet})`;
+    // Track win types
+    if (payout > 0 && winType !== "none") {
+      this.sessionStats.winsByType[winType]++;
+    }
+
+    // Track biggest win
+    const netWin = payout - bet;
+    if (netWin > this.sessionStats.biggestWin) {
+      this.sessionStats.biggestWin = netWin;
+    }
+
+    // Track special combinations
+    if (
+      typeof SlotsConfig !== "undefined" &&
+      SlotsConfig.isSpecialCombination &&
+      results &&
+      results.length > 0
+    ) {
+      if (SlotsConfig.isSpecialCombination(results)) {
+        this.sessionStats.specialCombinations++;
       }
     }
   }
 
-  updatePayoutDisplay(result) {
-    let payoutInfo = document.getElementById("last-payout");
-    if (!payoutInfo) {
-      payoutInfo = document.createElement("div");
-      payoutInfo.id = "last-payout";
-      payoutInfo.className = "payout-info";
-      const slotsContainer = document.querySelector(".slots-machine");
-      if (slotsContainer) {
-        slotsContainer.appendChild(payoutInfo);
-      }
+  checkAchievements(results, payout, bet, winType, isWin) {
+    // First win
+    if (
+      isWin &&
+      this.sessionStats.winsByType.small +
+        this.sessionStats.winsByType.medium +
+        this.sessionStats.winsByType.big +
+        this.sessionStats.winsByType.jackpot ===
+        1
+    ) {
+      this.unlockAchievement("slots_first_win");
     }
 
-    if (result.winAmount > 0) {
-      payoutInfo.innerHTML = `
-        <div class="payout-text win ${result.tier}">
-          <div class="win-amount">${this.game.formatMoney(
-            result.winAmount
-          )}</div>
-          <div class="win-name">${result.name}</div>
-          <div class="win-multiplier">${result.multiplier}x</div>
-        </div>
-      `;
+    // Specific symbol achievements
+    const symbolKeys = results.map((r) => r.key);
+    if (symbolKeys.every((key) => key === "CHERRY")) {
+      this.unlockAchievement("cherry_triple");
+    }
+    if (symbolKeys.every((key) => key === "SEVEN")) {
+      this.unlockAchievement("triple_seven");
+    }
+    if (symbolKeys.every((key) => key === "DIAMOND")) {
+      this.unlockAchievement("triple_diamond");
+    }
+
+    // High roller achievement
+    if (isWin && bet >= SlotsConfig.MAX_BET) {
+      this.unlockAchievement("slots_high_roller");
+    }
+
+    // Big win achievement
+    const multiplier = payout / bet;
+    if (multiplier >= 50) {
+      this.unlockAchievement("slots_big_win");
+    }
+
+    // Win streak achievement
+    if (this.streakCounter >= 5) {
+      this.unlockAchievement("slots_win_streak_5");
+    }
+
+    // Fruit salad achievement (needs counter)
+    const fruitSymbols = ["CHERRY", "LEMON", "ORANGE", "PLUM"];
+    if (symbolKeys.every((key) => fruitSymbols.includes(key))) {
+      // Would need to track fruit combinations
+    }
+
+    // Spin master achievement
+    if (this.sessionStats.spinsPlayed >= 100) {
+      this.unlockAchievement("spin_master");
+    }
+
+    // Marathon player achievement
+    const sessionTime = Date.now() - this.sessionStats.sessionStartTime;
+    if (sessionTime >= 30 * 60 * 1000) {
+      // 30 minutes
+      this.unlockAchievement("slots_marathon");
+    }
+  }
+
+  showSpinResults(results, payout, bet, winType, isWin) {
+    const netWin = payout - bet;
+
+    // Update last win display
+    const lastWinElement = document.getElementById("last-win");
+    if (lastWinElement) {
+      lastWinElement.textContent = isWin
+        ? `Last Win: $${netWin}`
+        : "Last Win: $0";
+      lastWinElement.className = `last-win ${isWin ? "win" : "lose"}`;
+    }
+
+    // Show win line if winning
+    if (isWin) {
+      this.showWinLine();
+      this.playWinSound(winType);
+      this.showWinEffects(winType, netWin);
     } else {
-      payoutInfo.innerHTML = `
-        <div class="payout-text lose">
-          <div class="lose-message">No match this spin</div>
-          <div class="lose-encouragement">Keep trying!</div>
-        </div>
-      `;
+      this.playSound("LOSE");
     }
 
-    // Show with animation
-    payoutInfo.style.opacity = "1";
-    payoutInfo.style.transform = "scale(1)";
+    // Show message
+    const symbolNames = results.map((r) => r.name).join(", ");
+    const message = isWin
+      ? `🎰 ${symbolNames} - Won $${netWin}!`
+      : `🎰 ${symbolNames} - No win this time`;
 
-    // Fade out after delay
+    this.game.showMessage(message, GameConfig.UI.NORMAL_MESSAGE_DURATION);
+
+    // Update game status
+    this.updateGameStatus(isWin ? `Won $${netWin}!` : "Try again!");
+  }
+
+  showWinLine() {
+    const winLine = document.getElementById("win-line");
+    if (winLine) {
+      winLine.classList.add("active");
+      setTimeout(() => {
+        winLine.classList.remove("active");
+      }, 2000);
+    }
+  }
+
+  playWinSound(winType) {
+    const soundMap = {
+      small: "WIN_SMALL",
+      medium: "WIN_MEDIUM",
+      big: "WIN_BIG",
+      jackpot: "WIN_JACKPOT",
+    };
+    this.playSound(soundMap[winType] || "WIN_SMALL");
+  }
+
+  showWinEffects(winType, amount) {
+    const machine = document.querySelector(".slots-machine");
+    if (!machine) return;
+
+    // Add win class for styling
+    machine.classList.add(`win-${winType}`);
     setTimeout(() => {
-      if (payoutInfo) {
-        payoutInfo.style.opacity = "0.7";
-        payoutInfo.style.transform = "scale(0.95)";
+      machine.classList.remove(`win-${winType}`);
+    }, 2000);
+
+    // Confetti for big wins
+    if (winType === "big" || winType === "jackpot") {
+      const particleCount =
+        winType === "jackpot"
+          ? SlotsConfig.PERFORMANCE.MAX_CONFETTI_PARTICLES
+          : 20;
+      AnimationUtils.createConfetti(machine, particleCount);
+    }
+
+    // Screen flash for jackpot
+    if (winType === "jackpot") {
+      const screen = document.getElementById("slots-screen");
+      if (screen) {
+        screen.classList.add("jackpot-flash");
+        setTimeout(() => {
+          screen.classList.remove("jackpot-flash");
+        }, 1500);
       }
-    }, 3000);
-  }
-
-  updateSpinHistory() {
-    // Keep only last 10 spins
-    if (this.spinHistory.length > 10) {
-      this.spinHistory = this.spinHistory.slice(-10);
     }
 
-    // Update history display if it exists
-    const historyEl = document.getElementById("spin-history");
-    if (historyEl) {
-      historyEl.innerHTML = this.spinHistory
-        .slice(-5)
-        .reverse()
-        .map(
-          (spin) => `
-            <div class="history-item ${spin.result.tier}">
-              <div class="history-reels">${spin.reels.join(" ")}</div>
-              <div class="history-result">${
-                spin.result.winAmount > 0
-                  ? "+" + this.game.formatMoney(spin.result.winAmount)
-                  : "No win"
-              }</div>
-            </div>
-          `
-        )
-        .join("");
-    }
+    // Floating win amount
+    const rect = machine.getBoundingClientRect();
+    AnimationUtils.floatingText(
+      `+$${amount}`,
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+      SlotsConfig.UI.COLORS.SUCCESS,
+      2000
+    );
   }
 
-  startAutoSpin(count) {
-    if (this.spinning || count <= 0) return;
+  // Achievement system methods
+  unlockAchievement(achievementId) {
+    if (this.achievements.includes(achievementId)) return;
 
-    this.autoSpinCount = count;
-    this.autoSpinActive = true;
+    // Safety check for SlotsConfig
+    if (typeof SlotsConfig === "undefined" || !SlotsConfig.getAchievement) {
+      console.error("SlotsConfig not available for achievements");
+      return;
+    }
 
-    // Update button text
-    this.updateSpinButton();
-
-    // Start auto-spinning
-    if (!this.spinning) {
-      this.spin();
+    const achievement = SlotsConfig.getAchievement(achievementId);
+    if (achievement) {
+      this.achievements.push(achievementId);
+      this.achievementRewards += achievement.reward;
+      this.showAchievement(achievement);
+      this.updateAchievementDisplay();
+      this.playSound("ACHIEVEMENT");
     }
   }
 
-  stopAutoSpin() {
-    this.autoSpinActive = false;
-    this.autoSpinCount = 0;
-    this.updateSpinButton();
+  showAchievement(achievement) {
+    const achievementsList = document.getElementById("achievements-list");
+    if (achievementsList) {
+      const noAchievements = achievementsList.querySelector(".no-achievements");
+      if (noAchievements) noAchievements.remove();
+
+      const achievementEl = document.createElement("div");
+      achievementEl.className = `achievement-item new ${achievement.rarity}`;
+      achievementEl.innerHTML = `
+        <span class="achievement-icon">${achievement.icon}</span>
+        <div class="achievement-info">
+          <strong>${achievement.name}</strong>
+          <small>${achievement.desc}</small>
+          <div class="achievement-reward">+$${achievement.reward}</div>
+        </div>
+      `;
+
+      achievementsList.insertBefore(achievementEl, achievementsList.firstChild);
+
+      setTimeout(() => {
+        achievementEl.classList.remove("new");
+      }, 100);
+
+      this.showFloatingAchievement(achievement);
+
+      if (achievementsList.children.length > 4) {
+        achievementsList.lastChild.remove();
+      }
+    }
   }
 
-  // Method called when screen becomes active
+  showFloatingAchievement(achievement) {
+    const rect = document
+      .querySelector(".achievements-panel")
+      ?.getBoundingClientRect();
+    if (rect) {
+      AnimationUtils.floatingText(
+        `🏆 ${achievement.name} +$${achievement.reward}`,
+        rect.left + rect.width / 2,
+        rect.top,
+        "#ffd700",
+        3000
+      );
+    }
+  }
+
+  updateAchievementDisplay() {
+    const countElement = document.getElementById("achievement-count");
+    const previewElement = document.getElementById("cashout-preview");
+    const rewardsElement = document.getElementById("achievement-rewards");
+
+    if (countElement) countElement.textContent = this.achievements.length;
+    if (previewElement) previewElement.textContent = this.achievementRewards;
+    if (rewardsElement) rewardsElement.textContent = this.achievementRewards;
+  }
+
+  updateAllDisplays() {
+    this.updateMoneyDisplay();
+    this.updateStatsDisplay();
+    this.updateAchievementDisplay();
+  }
+
+  updateMoneyDisplay() {
+    const moneyElement = document.getElementById("slots-money");
+    if (moneyElement) {
+      const formattedMoney = this.game.formatMoney
+        ? this.game.formatMoney(this.game.playerMoney)
+        : `$${this.game.playerMoney.toFixed(2)}`;
+      moneyElement.textContent = formattedMoney;
+    }
+  }
+
+  updateStatsDisplay() {
+    const spinsElement = document.getElementById("spins-count");
+    const streakElement = document.getElementById("win-streak");
+    const biggestWinElement = document.getElementById("biggest-win");
+
+    if (spinsElement) spinsElement.textContent = this.sessionStats.spinsPlayed;
+    if (streakElement) {
+      streakElement.textContent = this.streakCounter;
+      streakElement.className = this.streakCounter >= 3 ? "hot-streak" : "";
+    }
+    if (biggestWinElement)
+      biggestWinElement.textContent = this.sessionStats.biggestWin;
+  }
+
+  updateGameStatus(message) {
+    const statusElement = document.getElementById("game-status");
+    if (statusElement) {
+      statusElement.textContent = message;
+    }
+  }
+
+  updateTips() {
+    const tipElement = document.getElementById("current-tip");
+    if (tipElement) {
+      if (typeof SlotsConfig !== "undefined" && SlotsConfig.getRandomTip) {
+        tipElement.textContent = SlotsConfig.getRandomTip();
+      } else {
+        tipElement.textContent = "💡 Spin the reels to win big!";
+      }
+    }
+  }
+
+  playSound(soundType) {
+    try {
+      if (
+        typeof SlotsConfig !== "undefined" &&
+        SlotsConfig.SOUNDS &&
+        SlotsConfig.SOUNDS.ENABLED
+      ) {
+        console.log(`🔊 Playing slots sound: ${soundType}`);
+        // Placeholder for actual sound implementation
+      }
+    } catch (error) {
+      console.error("Error playing sound:", error);
+    }
+  }
+
   onShow() {
-    // Update bet display
-    const bet = this.game.gameSettings.slotsBet;
+    const bet =
+      this.game.gameSettings?.slotsBet ||
+      (typeof SlotsConfig !== "undefined" ? SlotsConfig.MIN_BET : 1);
+
+    // Update bet displays
     const elements = [
       { id: "slots-current-bet", value: bet },
       { id: "spin-cost", value: bet },
+      { id: "potential-payout", value: `$${bet * 2}` },
     ];
 
     elements.forEach(({ id, value }) => {
@@ -991,20 +864,41 @@ class SlotsGame {
       }
     });
 
-    // Update money display
-    const moneyElement = document.getElementById("slots-money");
-    if (moneyElement) {
-      moneyElement.textContent = this.game.formatMoney(this.game.playerMoney);
+    this.updateAllDisplays();
+
+    // Check affordability
+    const spinButton = document.getElementById("spin-button");
+    if (spinButton) {
+      spinButton.disabled = !this.game.canAfford(bet);
     }
+  }
 
-    // Update spin button
-    this.updateSpinButton();
+  // Utility methods
+  getGameState() {
+    return {
+      spinning: this.spinning,
+      sessionStats: this.sessionStats,
+      achievements: this.achievements.length,
+      achievementRewards: this.achievementRewards,
+      streakCounter: this.streakCounter,
+      bestStreak: this.bestStreak,
+    };
+  }
 
-    // Reset reels display
-    this.updateDisplay();
+  cleanup() {
+    // Clear any running animations
+    this.reelElements.forEach((reel) => {
+      if (reel) {
+        reel.classList.remove("spinning");
+      }
+    });
 
-    // Clear any existing animations
-    this.clearPreviousAnimations();
+    this.spinning = false;
+  }
+
+  destroy() {
+    this.cleanup();
+    this.destroyScreen();
   }
 }
 

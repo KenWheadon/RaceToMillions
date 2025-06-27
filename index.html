@@ -132,20 +132,25 @@
       <div id="message-display" class="message-display"></div>
     </div>
 
-    <!-- FIXED: Load scripts in proper order -->
-    <!-- 1. Configuration must load first -->
+    <!-- LOAD SCRIPTS IN PROPER ORDER -->
+    <!-- 1. Core configuration must load first -->
     <script src="config.js"></script>
 
-    <!-- 2. Utilities -->
+    <!-- 2. Game-specific configurations -->
+    <script src="blackjack-config.js"></script>
+    <script src="roulette-config.js"></script>
+    <script src="slots-config.js"></script>
+
+    <!-- 3. Utilities -->
     <script src="animation_utils.js"></script>
 
-    <!-- 3. Game classes (order matters for dependencies) -->
+    <!-- 4. Game classes -->
     <script src="slots.js"></script>
     <script src="blackjack.js"></script>
     <script src="roulette.js"></script>
     <script src="hub.js"></script>
 
-    <!-- 4. Main game controller loads last -->
+    <!-- 5. Main game controller loads last -->
     <script src="main.js"></script>
   </body>
 </html>
